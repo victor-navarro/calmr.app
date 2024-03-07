@@ -1,0 +1,19 @@
+Package: calm.app
+Title: A shiny app for the calm package
+Version: 0.0.0.9000
+Authors@R: 
+    person("Victor", "Navarro", , "navarrov@cardiff.ac.uk", role = c("aut", "cre"))
+Description: A visual interface to run simulations using associative learning models.
+License: GPL (>= 3)
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.3
+Imports: 
+    calm (>= 0.5.1),
+    htmltools,
+    rhandsontable,
+    shiny,
+    shinyalert,
+    shinydashboard
+Remotes: 
+    victor-navarro/calm
