@@ -88,11 +88,11 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
     if (debug) print("parsing")
     # parse design_df
     design_df(rhandsontable::hot_to_r(input$design_tbl))
-    design(calm::parse_design(design_df(), model = input$model_selection))
+    design(calmr::parse_design(design_df(), model = input$model_selection))
     # get parameters
     # but, keep parameters if there are compatible parameters already
     if (debug) print("getting parameters")
-    new_params <- calm::get_parameters(
+    new_params <- calmr::get_parameters(
       design(),
       model = input$model_selection
     )
@@ -140,7 +140,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
           print(current_parameters())
         }
         shiny::withProgress(message = "Sampling trials...", value = 0, {
-          experiment <- calm::make_experiment(
+          experiment <- calmr::make_experiment(
             design(),
             model = input$model_selection,
             parameters = current_parameters(),
@@ -156,7 +156,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
         }
         # run the experiment
         shiny::withProgress(message = "Simulating...", value = 0, {
-          experiment <- calm::run_experiment(experiment,
+          experiment <- calmr::run_experiment(experiment,
             aggregate = FALSE,
             .callback_fn = run_call
           )
@@ -165,7 +165,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
         n_outputs <- length(c(
           sapply(
             unique(arguments(experiment)$model),
-            calm::model_outputs
+            calmr::model_outputs
           )
         ))
         agg_call <- function() {
@@ -175,13 +175,13 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
         }
         if (debug) print("experiment ran")
         shiny::withProgress(message = "Aggregating results...", value = 0, {
-          experiment <- calm::aggregate(experiment, .callback_fn = agg_call)
+          experiment <- calmr::aggregate(experiment, .callback_fn = agg_call)
         })
         if (debug) print("experiment aggregated")
         experiment(experiment)
         shiny::withProgress(message = "Making plots...", value = 0, {
-          plots(calm::plot(experiment))
-          graphs(calm::graph(experiment))
+          plots(calmr::plot(experiment))
+          graphs(calmr::graph(experiment))
           shiny::setProgress(1)
         })
         if (debug) print("plots made")
@@ -280,7 +280,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
   shiny::observeEvent(input$graph_trial, {
     if (debug) print("remaking graphs due to slider change")
     if (!is.null(experiment())) {
-      graphs(calm:::graph(experiment(), t = input$graph_trial))
+      graphs(calmr:::graph(experiment(), t = input$graph_trial))
     }
   })
 
@@ -468,7 +468,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
   output$plot <- shiny::renderPlot({
     if (debug) print("rendering plot")
     if (!is.null(plots())) {
-      calm:::patch_plots(
+      calmr:::patch_plots(
         plots = plots(),
         selection = selected_plots(),
         plot_options = plot_options()
@@ -479,7 +479,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
   output$graph <- shiny::renderPlot({
     if (debug) print("rendering graph")
     if (!is.null(graphs())) {
-      calm:::patch_graphs(graphs())
+      calmr:::patch_graphs(graphs())
     }
   })
 

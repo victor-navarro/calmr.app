@@ -9,17 +9,17 @@ library(magrittr)
 library(rhandsontable)
 library(stringr)
 library(tibble)
-library(calm)
+library(calmr)
 
-supported_models <- calm::supported_models()
+supported_models <- calmr::supported_models()
 
 ui <- shinydashboard::dashboardPage(
   skin = "red",
   dashboardHeader(
-    title = "calm Simulator",
+    title = "calmr Simulator",
     tags$li(
       a("Help",
-        href = "https://victornavarro.org/calm/articles/calmr_app.html",
+        href = "https://victornavarro.org/calmr/articles/calmr_app.html",
         target = "_blank",
         title = "Help"
       ),
@@ -209,18 +209,18 @@ ui <- shinydashboard::dashboardPage(
         fluidPage(
           HTML('<center><img src="logo.png" width="20%"></center>'),
           br(), br(),
-          HTML('Canonical Associative Learning Models in R calm
+          HTML('Canonical Associative Learning Models in R calmr
           is developed by <a href="https://victornavarro.org" target="_blank">
           Victor Navarro</a>.'),
           br(), br(),
           HTML('To get access to the source code behind the package
           (and this app), head over to the
-          <a href="https://github.com/victor-navarro/calm"
+          <a href="https://github.com/victor-navarro/calmr"
           target="_blank">GitHub repository</a>.'),
           br(), br(),
           HTML('To consult the package documentation and other articles of
           interest, head over to the
-          <a href="https://victornavarro.org/calm/"
+          <a href="https://victornavarro.org/calmr/"
           target="_blank">package site</a>.'),
           br(), br(),
           p("Thanks for using the simulator."),

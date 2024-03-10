@@ -5,9 +5,9 @@
 
 make_par_tables <- function(model, parameters) {
   parnames <- names(parameters)
-  gpars <- sapply(parnames, calm:::.is_global_parameter, model = model)
-  tpars <- sapply(parnames, calm:::.is_trial_parameter, model = model)
-  trpars <- sapply(parnames, calm:::.is_trans_parameter, model = model)
+  gpars <- sapply(parnames, calmr:::.is_global_parameter, model = model)
+  tpars <- sapply(parnames, calmr:::.is_trial_parameter, model = model)
+  trpars <- sapply(parnames, calmr:::.is_trans_parameter, model = model)
   spars <- !gpars & !tpars & !trpars
 
   stimpars <- globpars <- trialpars <- transpars <- NULL
@@ -123,19 +123,19 @@ df_to_parlist <- function(df, type) {
 
 check_globalpars <- function(model, parameters) {
   any(sapply(names(parameters),
-    calm:::.is_global_parameter,
+    calmr:::.is_global_parameter,
     model = model
   ))
 }
 check_trialpars <- function(model, parameters) {
   any(sapply(names(parameters),
-    calm:::.is_trial_parameter,
+    calmr:::.is_trial_parameter,
     model = model
   ))
 }
 check_transpars <- function(model, parameters) {
   any(sapply(names(parameters),
-    calm:::.is_trans_parameter,
+    calmr:::.is_trans_parameter,
     model = model
   ))
 }

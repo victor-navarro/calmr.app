@@ -2,7 +2,7 @@
 % Please edit documentation in R/launch_app.R
 \name{launch_app}
 \alias{launch_app}
-\title{Run the calm shiny application}
+\title{Run the calmr shiny application}
 \usage{
 launch_app(browser = getOption("shiny.launch.browser", interactive()))
 }
@@ -10,5 +10,5 @@ launch_app(browser = getOption("shiny.launch.browser", interactive()))
 \item{browser}{If TRUE, the app is launched in a browser.}
 }
 \description{
-Run the calm shiny application
+Run the calmr shiny application
 }
