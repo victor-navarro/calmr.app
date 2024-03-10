@@ -164,7 +164,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
         # create a callback function for aggregation progress
         n_outputs <- length(c(
           sapply(
-            unique(arguments(experiment)$model),
+            unique(calmr::arguments(experiment)$model),
             calmr::model_outputs
           )
         ))
