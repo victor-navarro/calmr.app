@@ -11,6 +11,7 @@ RoxygenNote: 7.2.3
 Imports: 
     calmr (>= 0.5.1),
     htmltools,
+    openxlsx,
     rhandsontable,
     shiny,
     shinyalert,
