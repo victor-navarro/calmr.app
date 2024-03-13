@@ -5,4 +5,7 @@ rsconnect::setAccountInfo(
   secret = Sys.getenv("SECRET")
 )
 # deploy
-rsconnect::deployApp("calmr_app"), forceUpdate = TRUE)
+rsconnect::deployApp("calmr_app",
+  appName = "calmr_app_test",
+  forceUpdate = TRUE
+)
