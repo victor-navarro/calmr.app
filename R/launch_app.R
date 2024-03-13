@@ -5,7 +5,7 @@ launch_app <- function(
     browser = getOption("shiny.launch.browser", interactive())) {
   shiny::addResourcePath(
     "resources",
-    system.file("app_resources", package = "calmr.app")
+    system.file("resources", package = "calmr.app")
   )
   ui <- calmr_ui(
     analytics_file = NULL

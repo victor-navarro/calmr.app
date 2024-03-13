@@ -6,13 +6,14 @@ devtools::install_github("victor-navarro/calmr", force = TRUE)
 tmp <- tempdir()
 file.copy("R/server.R", file.path(tmp, "server.R"))
 file.copy("R/ui.R", file.path(tmp, "ui.R"))
-file.copy("inst/app_resources", tmp, recursive = TRUE)
+file.copy("inst/resources", tmp, recursive = TRUE)
 
 shiny::addResourcePath(
   "resources",
-  system.file("app_resources", package = "calmr.app")
+  system.file("resources", package = "calmr.app")
 )
 
 rsconnect::deployApp(tmp,
+  appName = "calmr_app_test",
   forceUpdate = TRUE
 )
