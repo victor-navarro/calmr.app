@@ -6,6 +6,6 @@ rsconnect::setAccountInfo(
 )
 # deploy
 rsconnect::deployApp("calmr_app",
-  appName = "calmr_app_test",
+  appName = "calmr_app",
   forceUpdate = TRUE
 )

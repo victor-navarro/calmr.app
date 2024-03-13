@@ -1,6 +1,6 @@
 # calmr.app
 
-Shiny app for Canonical Associative Learning Models in R
+Shiny app for Canonical Associative Learning Models and their Representations
 
 ## Installation
 
