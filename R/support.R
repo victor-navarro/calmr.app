@@ -2,7 +2,7 @@
 #' @param model A modelname string
 #' @param parameters A list with parameters
 #' @return A list with stimulus and global parameters (both data.frames)
-#' @noRd
+#' @export
 make_par_tables <- function(model, parameters) {
   parnames <- names(parameters)
   gpars <- sapply(parnames, calmr:::.is_global_parameter, model = model)
@@ -84,7 +84,7 @@ make_par_tables <- function(model, parameters) {
 #' @param df A `data.frame`
 #' @param type A character specifying which type of
 #' list we're dealing with.
-#' @noRd
+#' @export
 df_to_parlist <- function(df, type) {
   parnames <- names(df)
   pars <- NULL
@@ -124,26 +124,28 @@ df_to_parlist <- function(df, type) {
   }
   pars
 }
-
+#' @export
 check_globalpars <- function(model, parameters) {
   any(sapply(names(parameters),
     calmr:::.is_global_parameter,
     model = model
   ))
 }
+#' @export
 check_trialpars <- function(model, parameters) {
   any(sapply(names(parameters),
     calmr:::.is_trial_parameter,
     model = model
   ))
 }
+#' @export
 check_transpars <- function(model, parameters) {
   any(sapply(names(parameters),
     calmr:::.is_trans_parameter,
     model = model
   ))
 }
-
+#' @export
 join_parameters <- function(old, new) {
   # changing between models
   if (length(setdiff(names(old), names(new)))) {

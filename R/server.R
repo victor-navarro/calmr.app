@@ -162,7 +162,7 @@ calmr_server <- function() {
           }
           if (debug) print("experiment ran")
           shiny::withProgress(message = "Aggregating results...", value = 0, {
-            experiment <- calmr::aggregate(experiment, .callback_fn = agg_call)
+            experiment <- calmr::aggregate(experiment)
           })
           if (debug) print("experiment aggregated")
           experiment(experiment)

@@ -5,3 +5,5 @@ devtools::install_github("victor-navarro/calmr", force = TRUE)
 rsconnect::deployApp("C:/Users/sapvn2/calmr.app/inst/calmr_app",
   forceUpdate = TRUE
 )
+
+shiny::runApp("inst/calmr_app")
