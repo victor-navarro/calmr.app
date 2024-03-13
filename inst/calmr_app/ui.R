@@ -196,7 +196,7 @@ shinydashboard::dashboardPage(
         tabName = "about",
         shiny::fluidPage(
           htmltools::HTML(
-            '<center><img src="resources/logo.png" width="20%"></center>'
+            '<center><img src="logo.png" width="20%"></center>'
           ),
           htmltools::br(), htmltools::br(),
           htmltools::HTML('Canonical Associative Learning Models
