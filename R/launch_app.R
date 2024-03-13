@@ -3,13 +3,8 @@
 #' @export
 launch_app <- function(
     browser = getOption("shiny.launch.browser", interactive())) {
-  shiny::addResourcePath(
-    "resources",
-    system.file("resources", package = "calmr.app")
-  )
-  ui <- calmr_ui()
-  server <- calmr_server()
-  shiny::runApp(list(ui = ui, server = server),
+  app_dir <- system.file("calmr_app", package = "calmr.app")
+  shiny::runApp(app_dir,
     display.mode = "normal", launch.browser = browser
   )
 }
