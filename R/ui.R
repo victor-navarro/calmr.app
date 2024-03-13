@@ -2,10 +2,11 @@
 #' @param analytics_file A path to google analytics.
 #' Default is NULL, in which case, no analytics are pushed.
 #' @export
-calmr_ui <- function(
-    analytics_file = "inst/resources/google_analytics.html") {
-  if (!is.null(analytics_file)) {
-    analytics <- htmltools::includeHTML(analytics_file)
+calmr_ui <- function(use_analytics = FALSE) {
+  if (use_analytics) {
+    analytics <- htmltools::includeHTML(
+      "inst/resources/google_analytics.html"
+    )
   } else {
     analytics <- htmltools::HTML("")
   }

@@ -4,7 +4,7 @@
 \alias{calmr_ui}
 \title{Build calmr.app UI}
 \usage{
-calmr_ui(analytics_file = "inst/resources/google_analytics.html")
+calmr_ui(use_analytics = FALSE)
 }
 \arguments{
 \item{analytics_file}{A path to google analytics.

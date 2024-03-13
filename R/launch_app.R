@@ -7,9 +7,7 @@ launch_app <- function(
     "resources",
     system.file("resources", package = "calmr.app")
   )
-  ui <- calmr_ui(
-    analytics_file = NULL
-  )
+  ui <- calmr_ui()
   server <- calmr_server()
   shiny::runApp(list(ui = ui, server = server),
     display.mode = "normal", launch.browser = browser
