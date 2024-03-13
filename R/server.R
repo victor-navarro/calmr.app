@@ -1,8 +1,9 @@
+#' @export
 calmr_server <- function() {
   # get welcome design
   base_df <- calmr::get_design("controlled_blocking")
   # whether to print debugging messages
-  debug <- TRUE
+  debug <- FALSE
   # some options
   base_plot_options <- list(common_scale = TRUE)
   base_sim_options <- list(iterations = 1, miniblocks = TRUE)

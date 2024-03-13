@@ -1,14 +1,15 @@
 #' Run the calm shiny application
 #' @param browser If TRUE, the app is launched in a browser.
 #' @export
-
 launch_app <- function(
     browser = getOption("shiny.launch.browser", interactive())) {
-  app_dir <- system.file("calmr_app", package = "calmr.app")
-  if (app_dir == "") {
-    stop("Could not find app directory.
-    Try re-installing `calmr.app`.
-    If all else fails, let the maintainer know and use the online app.")
-  }
-  shiny::runApp(app_dir, display.mode = "normal", launch.browser = browser)
+  shiny::addResourcePath(
+    "resources",
+    system.file("app_resources", package = "calmr.app")
+  )
+  ui <- calmr_ui()
+  server <- calmr_server()
+  shiny::runApp(list(ui = ui, server = server),
+    display.mode = "normal", launch.browser = browser
+  )
 }

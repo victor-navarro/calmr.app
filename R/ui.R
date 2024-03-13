@@ -1,4 +1,13 @@
-calmr_ui <- function() {
+#' Build calmr.app UI
+#' @param analytics_file A path to google analytics.
+#' Default is NULL, in which case, no analytics are pushed.
+#' @export
+calmr_ui <- function(analytics_file = NULL) {
+  if (!is.null(analytics_file)) {
+    analytics <- htmltools::includeHTML(analytics_file)
+  } else {
+    analytics <- htmltools::HTML("")
+  }
   supported_models <- calmr::supported_models()
   shinydashboard::dashboardPage(
     skin = "red",
@@ -28,7 +37,7 @@ calmr_ui <- function() {
           shiny::fluidRow(
             # only tracks shinyapps website
             htmltools::tags$head(
-              htmltools::includeHTML("google_analytics.html")
+              analytics
             ),
             shinydashboard::box(
               width = 12,
@@ -197,7 +206,7 @@ calmr_ui <- function() {
           tabName = "about",
           shiny::fluidPage(
             htmltools::HTML(
-              '<center><img src="logo.png" width="20%"></center>'
+              '<center><img src="resources/logo.png" width="20%"></center>'
             ),
             htmltools::br(), htmltools::br(),
             htmltools::HTML('Canonical Associative Learning Models
