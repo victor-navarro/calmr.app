@@ -1,16 +1,18 @@
 devtools::install_github("victor-navarro/calmr.app", force = TRUE)
 devtools::install_github("victor-navarro/calmr", force = TRUE)
 
+
+# move files to temporary folder
+tmp <- tempdir()
+file.copy("R/server.R", file.path(tmp, "server.R"))
+file.copy("R/ui.R", file.path(tmp, "ui.R"))
+file.copy("inst/app_resources", tmp, recursive = TRUE)
+
 shiny::addResourcePath(
   "resources",
   system.file("app_resources", package = "calmr.app")
 )
-ui <- calmr.app::calmr_ui(
-  analytics_file =
-    "inst/app_resources/google_analytics.html"
-)
-server <- calmr.app::calmr_server()
 
-rsconnect::deployApp(list(ui = ui, server = server),
+rsconnect::deployApp(tmp,
   forceUpdate = TRUE
 )

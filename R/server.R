@@ -1,5 +1,7 @@
+#' Get calmr.app server
 #' @export
 calmr_server <- function() {
+  library(calmr.app)
   # get welcome design
   base_df <- calmr::get_design("controlled_blocking")
   # whether to print debugging messages

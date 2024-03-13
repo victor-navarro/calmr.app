@@ -2,7 +2,8 @@
 #' @param analytics_file A path to google analytics.
 #' Default is NULL, in which case, no analytics are pushed.
 #' @export
-calmr_ui <- function(analytics_file = NULL) {
+calmr_ui <- function(
+    analytics_file = "inst/app_resources/google_analytics.html") {
   if (!is.null(analytics_file)) {
     analytics <- htmltools::includeHTML(analytics_file)
   } else {
@@ -206,7 +207,7 @@ calmr_ui <- function(analytics_file = NULL) {
           tabName = "about",
           shiny::fluidPage(
             htmltools::HTML(
-              '<center><img src="resources/logo.png" width="20%"></center>'
+              '<center><img src="logo.png" width="20%"></center>'
             ),
             htmltools::br(), htmltools::br(),
             htmltools::HTML('Canonical Associative Learning Models
