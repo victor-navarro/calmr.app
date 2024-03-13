@@ -1,4 +1,4 @@
-FROM rocker/shiny
+FROM rocker/r-ver:4.2.3
 
 Label MAINTAINER Victor Navarro
 
