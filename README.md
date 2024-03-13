@@ -16,5 +16,5 @@ Afterward, you can install directly from this repository via:
 
 If you want to check the app without committing to an install, you can check it out here (be wary: the server might have run out of the free monthly quota).
 
-[https://victor-navarro.shinyapps.io/calm_app/](https://victor-navarro.shinyapps.io/calm_app/)
+[https://victor-navarro.shinyapps.io/calmr_app/](https://victor-navarro.shinyapps.io/calmr_app/)
 

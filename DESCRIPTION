@@ -15,6 +15,7 @@ Imports:
     rhandsontable,
     shiny,
     shinyalert,
-    shinydashboard
+    shinydashboard,
+    stringr
 Remotes: 
     victor-navarro/calmr

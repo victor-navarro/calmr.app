@@ -1,4 +1,6 @@
+require(shiny)
 print("hello")
+
 # # authenticate
 # rsconnect::setAccountInfo(
 #   name = Sys.getenv("SHINY_ACC_NAME"),

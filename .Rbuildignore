@@ -1,3 +1,5 @@
 ^calmr\.app\.Rproj$
 ^\.Rproj\.user$
 ^LICENSE\.md$
+.github
+Dockerfile
