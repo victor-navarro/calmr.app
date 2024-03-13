@@ -1,15 +1,7 @@
-source("support.R")
-# welcome design
-base_df <- data.frame(
-  Group = c("Blocking", "Control"),
-  P1 = c("10N>(US)", ""),
-  R1 = FALSE,
-  P2 = c("10NL>(US)/10#L", "10NL>(US)/10#L"),
-  R2 = FALSE
-)
-
+# get welcome design
+base_df <- calmr::get_design("controlled_blocking")
 # whether to print debugging messages
-debug <- FALSE
+debug <- TRUE
 # some options
 base_plot_options <- list(common_scale = TRUE)
 base_sim_options <- list(iterations = 1, miniblocks = TRUE)
@@ -30,7 +22,6 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
   needs_trialpars <- shiny::reactiveVal(FALSE)
   needs_transpars <- shiny::reactiveVal(FALSE)
   ran <- shiny::reactiveVal(FALSE)
-  raw_results <- shiny::reactiveVal()
   experiment <- shiny::reactiveVal()
 
   #### Input Logic ####
@@ -162,12 +153,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
           )
         })
         # create a callback function for aggregation progress
-        n_outputs <- length(c(
-          sapply(
-            unique(calmr::arguments(experiment)$model),
-            calmr::model_outputs
-          )
-        ))
+        n_outputs <- length(calmr::model_outputs(experiment@model))
         agg_call <- function() {
           shiny::incProgress(
             1 / n_outputs
@@ -266,7 +252,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
     if (!is.null(experiment())) {
       if (debug) print("populating graph slider after experiment run")
       last_trial <- max(
-        results(experiment())[[1]]$trial
+        calmr::results(experiment())[[1]]$trial
       )
       shiny::updateSliderInput(
         inputId = "graph_trial",
@@ -385,12 +371,14 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
   output$design_tbl <- rhandsontable::renderRHandsontable({
     if (debug) print("rendering design table")
     if (!is.null(design_df())) {
-      rhandsontable::rhandsontable(design_df(), rowHeaders = F) %>%
-        rhandsontable::hot_col(col = seq(3, ncol(design_df()), 2), renderer = "
+      rhandsontable::rhandsontable(design_df(), rowHeaders = FALSE) |>
+        rhandsontable::hot_col(
+          col = seq(3, ncol(design_df()), 2), renderer = "
            function (instance, td, row, col, prop, value, cellProperties) {
              Handsontable.renderers.CheckboxRenderer.apply(this, arguments);
               td.style.textAlign = 'center';
-           }")
+           }"
+        )
     }
   })
 
@@ -400,7 +388,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
     if (!is.null(par_tables()$stimulus)) {
       rhandsontable::rhandsontable(par_tables()$stimulus,
         rowHeaders = FALSE
-      ) %>%
+      ) |>
         rhandsontable::hot_col("Stimulus", readOnly = TRUE)
     }
   })
@@ -411,7 +399,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
     if (!is.null(par_tables()$global)) {
       rhandsontable::rhandsontable(par_tables()$global,
         rowHeaders = FALSE
-      ) %>%
+      ) |>
         rhandsontable::hot_col("Parameter", readOnly = TRUE)
     }
   })
@@ -427,7 +415,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
     if (!is.null(par_tables()$trial)) {
       rhandsontable::rhandsontable(par_tables()$trial,
         rowHeaders = FALSE
-      ) %>%
+      ) |>
         rhandsontable::hot_col(c("Parameter", "Trial"), readOnly = TRUE)
     }
   })
@@ -443,7 +431,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
     if (!is.null(par_tables()$transition)) {
       rhandsontable::rhandsontable(par_tables()$transition,
         rowHeaders = FALSE
-      ) %>%
+      ) |>
         rhandsontable::hot_col(c("Parameter", "Trial", "Transition"),
           readOnly = TRUE
         )
@@ -494,24 +482,30 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
       if (needs_globalpars()) {
         data <- c(
           data,
-          list(global_parameters = rhandsontable::hot_to_r(input$glob_par_tbl))
+          list(global_parameters = rhandsontable::hot_to_r(
+            input$glob_par_tbl
+          ))
         )
       }
       if (needs_trialpars()) {
         data <- c(
           data,
-          list(trial_parameters = rhandsontable::hot_to_r(input$trial_par_tbl))
+          list(trial_parameters = rhandsontable::hot_to_r(
+            input$trial_par_tbl
+          ))
         )
       }
       if (needs_transpars()) {
         data <- c(
           data,
-          list(trans_parameters = rhandsontable::hot_to_r(input$trans_par_tbl))
+          list(trans_parameters = rhandsontable::hot_to_r(
+            input$trans_par_tbl
+          ))
         )
       }
       data <- c(
         data,
-        results(experiment())
+        calmr::results(experiment())
       )
       openxlsx::write.xlsx(data, file = filename, overwrite = TRUE)
     }

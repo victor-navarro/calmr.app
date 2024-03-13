@@ -1,24 +1,10 @@
-library(shiny)
-library(shinydashboard)
-library(shinyalert)
-library(tidyr)
-library(dplyr)
-library(ggbeeswarm)
-library(htmltools)
-library(magrittr)
-library(rhandsontable)
-library(stringr)
-library(tibble)
-library(calmr)
-
 supported_models <- calmr::supported_models()
-
-ui <- shinydashboard::dashboardPage(
+shinydashboard::dashboardPage(
   skin = "red",
-  dashboardHeader(
-    title = "calmr Simulator",
-    tags$li(
-      a("Help",
+  shinydashboard::dashboardHeader(
+    title = "Calmr Simulator",
+    htmltools::tags$li(
+      htmltools::a("Help",
         href = "https://victornavarro.org/calmr/articles/calmr_app.html",
         target = "_blank",
         title = "Help"
@@ -26,21 +12,23 @@ ui <- shinydashboard::dashboardPage(
       class = "dropdown"
     )
   ),
-  dashboardSidebar(
-    sidebarMenu(
-      menuItem("Home", tabName = "home"),
-      menuItem("Options", tabName = "options"),
-      menuItem("About", tabName = "about")
+  shinydashboard::dashboardSidebar(
+    shinydashboard::sidebarMenu(
+      shinydashboard::menuItem("Home", tabName = "home"),
+      shinydashboard::menuItem("Options", tabName = "options"),
+      shinydashboard::menuItem("About", tabName = "about")
     )
   ),
-  dashboardBody(
-    tabItems(
+  shinydashboard::dashboardBody(
+    shinydashboard::tabItems(
       # First tab content
-      tabItem(
+      shinydashboard::tabItem(
         tabName = "home",
-        fluidRow(
+        shiny::fluidRow(
           # only tracks shinyapps website
-          tags$head(includeHTML("google_analytics.html")),
+          htmltools::tags$head(
+            htmltools::includeHTML("google_analytics.html")
+          ),
           shinydashboard::box(
             width = 12,
             title = "Design",
@@ -101,7 +89,7 @@ ui <- shinydashboard::dashboardPage(
             ),
             shiny::conditionalPanel(
               "output.parsed",
-              h5("Stimulus-specific parameters")
+              htmltools::h5("Stimulus-specific parameters")
             ),
             shiny::conditionalPanel(
               "output.parsed",
@@ -112,7 +100,7 @@ ui <- shinydashboard::dashboardPage(
             ),
             shiny::conditionalPanel(
               "output.parsed && output.needs_globalpars",
-              h5("Global parameters")
+              htmltools::h5("Global parameters")
             ),
             shiny::conditionalPanel(
               "output.parsed && output.needs_globalpars",
@@ -123,7 +111,7 @@ ui <- shinydashboard::dashboardPage(
             ),
             shiny::conditionalPanel(
               "output.parsed && output.needs_trialpars",
-              h5("Trial-specific parameters")
+              htmltools::h5("Trial-specific parameters")
             ),
             shiny::conditionalPanel(
               "output.parsed && output.needs_trialpars",
@@ -134,7 +122,7 @@ ui <- shinydashboard::dashboardPage(
             ),
             shiny::conditionalPanel(
               "output.parsed && output.needs_transpars",
-              h5("Transition-specific parameters")
+              htmltools::h5("Transition-specific parameters")
             ),
             shiny::conditionalPanel(
               "output.parsed && output.needs_transpars",
@@ -175,9 +163,9 @@ ui <- shinydashboard::dashboardPage(
         )
       ),
       # Options tab content
-      tabItem(
+      shinydashboard::tabItem(
         tabName = "options",
-        fluidPage(
+        shiny::fluidPage(
           shinydashboard::box(
             collapsible = TRUE,
             width = NULL,
@@ -204,27 +192,32 @@ ui <- shinydashboard::dashboardPage(
           )
         )
       ),
-      tabItem(
+      shinydashboard::tabItem(
         tabName = "about",
-        fluidPage(
-          HTML('<center><img src="logo.png" width="20%"></center>'),
-          br(), br(),
-          HTML('Canonical Associative Learning Models in R calmr
+        shiny::fluidPage(
+          htmltools::HTML(
+            '<center><img src="logo.png" width="20%"></center>'
+          ),
+          htmltools::br(), htmltools::br(),
+          htmltools::HTML('Canonical Associative Learning Models
+            and their Representations (calmr)
           is developed by <a href="https://victornavarro.org" target="_blank">
           Victor Navarro</a>.'),
-          br(), br(),
-          HTML('To get access to the source code behind the package
+          htmltools::br(), htmltools::br(),
+          htmltools::HTML('To get access to the source code behind the package
           (and this app), head over to the
           <a href="https://github.com/victor-navarro/calmr"
           target="_blank">GitHub repository</a>.'),
-          br(), br(),
-          HTML('To consult the package documentation and other articles of
+          htmltools::br(), htmltools::br(),
+          htmltools::HTML(
+            'To consult the package documentation and other articles of
           interest, head over to the
           <a href="https://victornavarro.org/calmr/"
-          target="_blank">package site</a>.'),
-          br(), br(),
-          p("Thanks for using the simulator."),
-          p("Victor")
+          target="_blank">package site</a>.'
+          ),
+          htmltools::br(), htmltools::br(),
+          htmltools::p("Thanks for using the simulator."),
+          htmltools::p("Victor")
         )
       )
     )

@@ -2,7 +2,7 @@
 #' @param model A modelname string
 #' @param parameters A list with parameters
 #' @return A list with stimulus and global parameters (both data.frames)
-
+#' @noRd
 make_par_tables <- function(model, parameters) {
   parnames <- names(parameters)
   gpars <- sapply(parnames, calmr:::.is_global_parameter, model = model)
@@ -81,6 +81,10 @@ make_par_tables <- function(model, parameters) {
 }
 
 #' Convert parameter data.frame to list
+#' @param df A `data.frame`
+#' @param type A character specifying which type of
+#' list we're dealing with.
+#' @noRd
 df_to_parlist <- function(df, type) {
   parnames <- names(df)
   pars <- NULL
