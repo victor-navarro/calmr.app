@@ -5,6 +5,6 @@ account: victor-navarro
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 8169087
-bundleId: 8368024
+bundleId: 8368040
 url: https://victor-navarro.shinyapps.io/calmr_app/
 version: 1
