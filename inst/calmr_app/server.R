@@ -136,7 +136,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
             design(),
             model = input$model_selection,
             parameters = current_parameters(),
-            options = sim_options(),
+            iterations = sim_options()$iterations,
             .callback_fn = args_call
           )
         })
