@@ -27,7 +27,7 @@ bslib::page_navbar(
             shiny::selectInput(
               inputId = "model_selection",
               label = NULL, choices = supported_models,
-              selected = "TD", multiple = FALSE
+              selected = "RW1972", multiple = FALSE
             )
           ),
           bslib::accordion_panel(
