@@ -15,7 +15,9 @@ Imports:
     rhandsontable,
     shiny,
     shinyalert,
-    shinydashboard,
-    stringr
+    stringr,
+    plotly,
+    bslib,
+    shinyjs
 Remotes: 
     victor-navarro/calmr

@@ -2,15 +2,14 @@
 #' @param model A modelname string
 #' @param parameters A list with parameters
 #' @return A list with stimulus and global parameters (both data.frames)
-#' @export
-make_par_tables <- function(model, parameters) {
+#' @noRd
+.make_par_tables <- function(model, parameters, timings) {
   parnames <- names(parameters)
   gpars <- sapply(parnames, calmr:::.is_global_parameter, model = model)
-  tpars <- sapply(parnames, calmr:::.is_trial_parameter, model = model)
-  trpars <- sapply(parnames, calmr:::.is_trans_parameter, model = model)
-  spars <- !gpars & !tpars & !trpars
+  spars <- !gpars
 
-  stimpars <- globpars <- trialpars <- transpars <- NULL
+  stimpars <- globpars <- trialpars <- transpars <-
+    periodpars <- timglobalpars <- NULL
   if (any(spars)) {
     stimnames <- names(parameters[[which(spars)[1]]])
     stimpars <- data.frame(
@@ -28,55 +27,31 @@ make_par_tables <- function(model, parameters) {
     names(globpars) <- stringr::str_to_title(names(globpars))
   }
 
-  if (any(tpars)) {
-    tnames <- names(parameters[[which(tpars)[1]]])
-    pnames <- rep(names(parameters[tpars]), each = length(tnames))
-    trialpars <- data.frame(
-      parameter = pnames,
-      trial = tnames,
-      value = as.numeric(unlist(parameters[parnames[tpars]]))
-    )
+  if (!is.null(timings)) {
+    trialpars <- timings$trial_ts
     names(trialpars) <- stringr::str_to_title(names(trialpars))
-  }
 
-  # can't be bothered; too nested
-  if (any(trpars)) {
-    tnames <- names(parameters[[which(trpars)[1]]])
-    trnames <- unique(names(unlist(unname(parameters[[which(trpars)[1]]]))))
-    pnames <- names(parameters[trpars])
-    transpars <- data.frame()
-    for (par in pnames) {
-      for (trial in tnames) {
-        trial_trnames <- names(parameters[[par]][[trial]])
-        for (tr in trial_trnames) {
-          val <- parameters[[par]][[trial]][[tr]]
-          if (length(val)) {
-            transpars <- rbind(transpars, data.frame(
-              parameter = par,
-              trial = trial,
-              transition = tr,
-              value = val
-            ))
-          }
-        }
-      }
-    }
-
-
-    transpars <- data.frame(
-      parameter = pnames,
-      trial = tnames,
-      transition = trnames,
-      value = as.numeric(unlist(parameters[parnames[trpars]]))
-    )
+    transpars <- timings$transition_ts
     names(transpars) <- stringr::str_to_title(names(transpars))
+
+    periodpars <- timings$period_ts
+    names(periodpars) <- stringr::str_to_title(names(periodpars))
+
+    timglobalpars <- timings[names(timings)[!(names(timings) %in%
+      c("trial_ts", "transition_ts", "period_ts"))]]
+    timglobalpars <- data.frame(
+      Parameter = names(timglobalpars),
+      Value = unname(unlist(c(timglobalpars)))
+    )
   }
 
   return(list(
     stimulus = stimpars,
     global = globpars,
     trial = trialpars,
-    transition = transpars
+    transition = transpars,
+    period = periodpars,
+    time_global = timglobalpars
   ))
 }
 
@@ -84,8 +59,10 @@ make_par_tables <- function(model, parameters) {
 #' @param df A `data.frame`
 #' @param type A character specifying which type of
 #' list we're dealing with.
-#' @export
-df_to_parlist <- function(df, type) {
+#' @return A list.
+#' @note This is a support function for the app.
+#' @noRd
+.df_to_parlist <- function(df, type) {
   parnames <- names(df)
   pars <- NULL
   if (type == "stimulus") {
@@ -101,66 +78,51 @@ df_to_parlist <- function(df, type) {
       df$Value[df$Parameter == p]
     }, simplify = FALSE))
   }
-  if (type == "trial") {
-    pars <- sapply(unique(df$Parameter), function(p) {
-      stats::setNames(
-        df$Value[df$Parameter == p],
-        df$Trial[df$Parameter == p]
-      )
-    }, simplify = FALSE)
-  }
-  if (type == "transition") {
-    pars <- list()
-    parnames <- unique(df$Parameter)
-    for (p in parnames) {
-      pdat <- df[df$Parameter == p, ]
-      pars[[p]] <- sapply(unique(pdat$Trial), function(t) {
-        stats::setNames(
-          pdat$Value[df$Trial == t],
-          df$Transition[df$Trial == t]
-        )
-      }, simplify = FALSE)
-    }
-  }
   pars
 }
-#' @export
-check_globalpars <- function(model, parameters) {
+.check_globalpars <- function(model, parameters) {
   any(sapply(names(parameters),
     calmr:::.is_global_parameter,
     model = model
   ))
 }
-#' @export
-check_trialpars <- function(model, parameters) {
-  any(sapply(names(parameters),
-    calmr:::.is_trial_parameter,
-    model = model
-  ))
-}
-#' @export
-check_transpars <- function(model, parameters) {
-  any(sapply(names(parameters),
-    calmr:::.is_trans_parameter,
-    model = model
-  ))
-}
-#' @export
-join_parameters <- function(old, new) {
-  # changing between models
-  if (length(setdiff(names(old), names(new)))) {
-    return(new)
-  }
-  mapply(.replace, new, old, simplify = FALSE)
+
+
+.update_trial_slider <- function(slider_id, group_number, experiment) {
+  # updates a trial slider with the maximum trial in the experiment
+  max_t <- calmr.app:::.max_graph_trial(group_number, experiment)
+  shiny::updateSliderInput(inputId = slider_id, max = max_t, value = max_t)
 }
 
-# recursively replaces the intersection of parameters
-.replace <- function(a, b, ...) {
-  if (is.list(a)) {
-    mapply(.replace, a = a, b = b, simplify = FALSE)
-  } else {
-    to_replace <- intersect(names(a), names(b))
-    a[to_replace] <- b[to_replace]
-    list(a)
-  }
+.max_graph_trial <- function(group_number, experiment) {
+  max(calmr::experiences(experiment)[[group_number]]$trial)
+}
+
+# filters experimental data
+.filter_experiment <- function(experiment, filters) {
+  res <- calmr::results(experiment)
+  res <- lapply(
+    res,
+    function(r) r[r$phase %in% filters$phase_f, ]
+  )
+  res <- lapply(
+    res,
+    function(r) r[r$trial_type %in% filters$trial_f, ]
+  )
+  res <- lapply(
+    res,
+    function(r) r[r$s1 %in% filters$stim_f, ]
+  )
+  res <- lapply(
+    res,
+    function(r) {
+      if ("s2" %in% names(r)) {
+        r[r$s2 %in% filters$stim_f, ]
+      } else {
+        r
+      }
+    }
+  )
+  experiment@results@aggregated_results <- res
+  experiment
 }
