@@ -166,7 +166,7 @@ bslib::page_navbar(
       href = "https://github.com/victor-navarro/calmr"
     )),
     bslib::nav_item(htmltools::tags$a("calmr.app on Github",
-      href = "https://github.com/victor-navarro/calmr"
+      href = "https://github.com/victor-navarro/calmr.app"
     )),
     bslib::nav_item(htmltools::tags$a("calmr on CRAN",
       href = "https://cran.r-project.org/web/packages/calmr/"
