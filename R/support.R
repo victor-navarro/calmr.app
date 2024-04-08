@@ -16,7 +16,7 @@
       stimulus = stimnames,
       as.data.frame(parameters[parnames[spars]])
     )
-    names(stimpars) <- stringr::str_to_title(names(stimpars))
+    names(stimpars) <- tools::toTitleCase(names(stimpars))
   }
 
   if (any(gpars)) {
@@ -24,25 +24,31 @@
       parameter = parnames[gpars],
       value = as.numeric(unlist(parameters[parnames[gpars]]))
     )
-    names(globpars) <- stringr::str_to_title(names(globpars))
+    names(globpars) <- tools::toTitleCase(names(globpars))
   }
 
   if (!is.null(timings)) {
-    trialpars <- timings$trial_ts
-    names(trialpars) <- stringr::str_to_title(names(trialpars))
-
-    transpars <- timings$transition_ts
-    names(transpars) <- stringr::str_to_title(names(transpars))
-
-    periodpars <- timings$period_ts
-    names(periodpars) <- stringr::str_to_title(names(periodpars))
+    if (!is.null(timings$trial_ts)) {
+      trialpars <- timings$trial_ts
+      names(trialpars) <- tools::toTitleCase(names(trialpars))
+    }
+    if (!is.null(timings$transition_ts)) {
+      transpars <- timings$transition_ts
+      names(transpars) <- tools::toTitleCase(names(transpars))
+    }
+    if (!is.null(timings$period_ts)) {
+      periodpars <- timings$period_ts
+      names(periodpars) <- tools::toTitleCase(names(periodpars))
+    }
 
     timglobalpars <- timings[names(timings)[!(names(timings) %in%
       c("trial_ts", "transition_ts", "period_ts"))]]
-    timglobalpars <- data.frame(
-      Parameter = names(timglobalpars),
-      Value = unname(unlist(c(timglobalpars)))
-    )
+    if (length(timglobalpars)) {
+      timglobalpars <- data.frame(
+        Parameter = names(timglobalpars),
+        Value = unname(unlist(c(timglobalpars)))
+      )
+    }
   }
 
   return(list(
