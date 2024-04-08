@@ -1,5 +1,3 @@
-supported_models <- calmr::supported_models()
-
 rhandsontable_css <- ".handsontable {
     overflow: hidden;
 }"
@@ -24,32 +22,56 @@ bslib::page_navbar(
           multiple = FALSE,
           bslib::accordion_panel(
             "Model",
-            shiny::selectInput(
-              inputId = "model_selection",
-              label = NULL, choices = supported_models,
-              selected = "RW1972", multiple = FALSE
+            fillable = FALSE,
+            shiny::uiOutput("tut_mod_selection"),
+            shiny::fluidRow(
+              shiny::column(
+                10,
+                shiny::selectInput(
+                  inputId = "model_selection",
+                  label = NULL, choices = NULL,
+                  selected = "RW1972", multiple = FALSE
+                )
+              ),
+              shiny::column(
+                2,
+                shiny::div(
+                  style = "margin-top:5px",
+                  shiny::htmlOutput("model_page_button")
+                )
+              )
             )
           ),
           bslib::accordion_panel(
             "Filters",
+            shiny::uiOutput("tut_filters"),
             shiny::uiOutput("filters")
           ),
           bslib::accordion_panel(
             "Options",
+            shiny::uiOutput("tut_options"),
             shiny::sliderInput(
               inputId = "iterations",
               label = "Iterations", min = 1,
               max = 200, value = 1, ticks = FALSE
             ),
-            # shiny::checkboxInput(
-            #   inputId = "miniblocks",
-            #   label = "Create trial blocks",
-            #   value = TRUE
-            # ),
+            shiny::checkboxInput(
+              inputId = "miniblocks",
+              label = "Create trial blocks",
+              value = TRUE
+            ),
             shiny::selectizeInput(
               inputId = "plotting_palette",
               label = "Plots palette",
               choices = c("Viridis", "Hue")
+            )
+          ),
+          bslib::card(
+            class = "accordion-item",
+            shiny::checkboxInput(
+              inputId = "tutorial_mode",
+              label = "Show help",
+              value = FALSE
             )
           ),
           shiny::imageOutput("logo",
@@ -62,6 +84,7 @@ bslib::page_navbar(
           bslib::card_header("Design"),
           bslib::card_body(
             fillable = FALSE,
+            shiny::uiOutput("tut_design1"),
             shiny::actionButton(
               inputId = "grouprm",
               label = "Group-", class = "xs"
@@ -92,7 +115,8 @@ bslib::page_navbar(
             ),
             htmltools::br(),
             htmltools::br(),
-            rhandsontable::rHandsontableOutput("design_tbl")
+            rhandsontable::rHandsontableOutput("design_tbl"),
+            shiny::uiOutput("tut_design2")
           )
         ),
         shiny::conditionalPanel(
@@ -100,6 +124,7 @@ bslib::page_navbar(
           bslib::card(
             bslib::card_header("Parameters"),
             full_screen = TRUE,
+            shiny::uiOutput("tut_parameters"),
             shiny::uiOutput("parameter_ui")
           )
         ),
@@ -108,6 +133,7 @@ bslib::page_navbar(
           bslib::card(
             bslib::card_header("Results"),
             full_screen = TRUE,
+            shiny::uiOutput("tut_results"),
             shiny::uiOutput("results_panel")
           )
         ),
@@ -116,16 +142,13 @@ bslib::page_navbar(
           bslib::card(
             bslib::card_header("Association Graphs"),
             full_screen = TRUE,
+            shiny::uiOutput("tut_graphs"),
             shiny::uiOutput("graphs_panel")
           )
         ), fillable = FALSE
       )
     )
   ),
-  # bslib::nav_panel(
-  #   title = "Help",
-  #   "Hello"
-  # ),
   bslib::nav_panel(
     title = "About",
     bslib::layout_column_wrap(
@@ -155,9 +178,6 @@ bslib::page_navbar(
       )
     )
   ),
-  bslib::nav_item(htmltools::tags$a("Help",
-    href = "https://victornavarro.org/calmr/articles/calmr_app.html"
-  )),
   bslib::nav_spacer(),
   bslib::nav_menu(
     title = "Links",

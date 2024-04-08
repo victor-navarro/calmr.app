@@ -1,15 +1,15 @@
 library(calmr.app)
-# get welcome design
-base_df <- calmr::get_design("controlled_blocking")
 # whether to print debugging messages
 debug <- FALSE
-# some options
-base_sim_options <- list(iterations = 1, miniblocks = TRUE)
-
 
 shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
+  shiny::updateSelectizeInput(
+    inputId = "model_selection",
+    choices = calmr::supported_models(),
+    selected = "RW1972"
+  )
   #### Reactive values ####
-  design_df <- shiny::reactiveVal(base_df)
+  design_df <- shiny::reactiveVal(calmr::get_design("controlled_blocking"))
   design <- shiny::reactiveVal()
   current_parameters <- shiny::reactiveVal()
   current_timings <- shiny::reactiveVal()
@@ -20,7 +20,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
   graphs <- shiny::reactiveVal()
   current_graph1 <- shiny::reactiveVal()
   current_graph2 <- shiny::reactiveVal()
-  sim_options <- shiny::reactiveVal(base_sim_options)
+  sim_options <- shiny::reactiveVal(list(iterations = 1, miniblocks = TRUE))
   parsed <- shiny::reactiveVal(FALSE)
   needs_globalpars <- shiny::reactiveVal(FALSE)
   needs_timings <- shiny::reactiveVal(FALSE)
@@ -86,41 +86,56 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
     if (debug) print("parsing")
     # parse design_df
     design_df(rhandsontable::hot_to_r(input$design_tbl))
-    design(calmr::parse_design(design_df()))
-    # get parameters
-    # TODO: keep parameters if there are compatible parameters already
-    if (debug) print("getting parameters")
-    new_params <- calmr::get_parameters(
-      design(),
-      model = input$model_selection
+    tryCatch(
+      {
+        design(calmr::parse_design(design_df()))
+        # get parameters
+        # TODO: keep parameters if there are compatible parameters already
+        if (debug) print("getting parameters")
+        new_params <- calmr::get_parameters(
+          design(),
+          model = input$model_selection
+        )
+        current_parameters(new_params)
+
+        # flips needs_timings if necessary
+        needs_timings(
+          input$model_selection %in%
+            calmr::supported_timed_models()
+        )
+        if (needs_timings()) {
+          if (debug) print("getting timings")
+          current_timings(calmr::get_timings(design(), model = input$model_selection))
+        }
+        # make parameter tables
+        par_tables(calmr.app:::.make_par_tables(
+          model = input$model_selection,
+          parameters = current_parameters(),
+          timings = current_timings()
+        ))
+
+        # flip needs_globalpars if necessary
+        needs_globalpars(calmr.app:::.check_globalpars(
+          input$model_selection,
+          current_parameters()
+        ))
+
+        if (debug) print("done with parameters")
+        # flip parsed
+        parsed(TRUE)
+      },
+      error = function(e) {
+        print(e)
+        shinyalert::shinyalert(
+          title = "Error!",
+          text = "Could not parse the design. Please check the tutorial mode.",
+          size = "s", closeOnEsc = TRUE,
+          closeOnClickOutside = TRUE, html = FALSE,
+          type = "error", showConfirmButton = TRUE, showCancelButton = FALSE,
+          confirmButtonText = "OK", confirmButtonCol = "#AEDEF4"
+        )
+      }
     )
-    current_parameters(new_params)
-
-    # flips needs_timings if necessary
-    needs_timings(
-      input$model_selection %in%
-        calmr::supported_timed_models()
-    )
-    if (needs_timings()) {
-      if (debug) print("getting timings")
-      current_timings(calmr::get_timings(design()))
-    }
-    # make parameter tables
-    par_tables(calmr.app:::.make_par_tables(
-      model = input$model_selection,
-      parameters = current_parameters(),
-      timings = current_timings()
-    ))
-
-    # flip needs_globalpars if necessary
-    needs_globalpars(calmr.app:::.check_globalpars(
-      input$model_selection,
-      current_parameters()
-    ))
-
-    if (debug) print("done with parameters")
-    # flip parsed
-    parsed(TRUE)
   })
 
   shiny::observeEvent(input$run_experiment, {
@@ -529,19 +544,20 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
 
   #### Outputs ####
   # Design table
-  output$design_tbl <- rhandsontable::renderRHandsontable({
-    if (debug) print("rendering design table")
-    if (!is.null(design_df())) {
-      rhandsontable::rhandsontable(design_df(), rowHeaders = FALSE) |>
-        rhandsontable::hot_col(
-          col = seq(3, ncol(design_df()), 2), renderer = "
+  output$design_tbl <- output$tutorial_design_tbl <-
+    rhandsontable::renderRHandsontable({
+      if (debug) print("rendering design table")
+      if (!is.null(design_df())) {
+        rhandsontable::rhandsontable(design_df(), rowHeaders = FALSE) |>
+          rhandsontable::hot_col(
+            col = seq(3, ncol(design_df()), 2), renderer = "
            function (instance, td, row, col, prop, value, cellProperties) {
              Handsontable.renderers.CheckboxRenderer.apply(this, arguments);
               td.style.textAlign = 'center';
            }"
-        )
-    }
-  })
+          )
+      }
+    })
 
   # Stimulus parameters table
   output$stim_par_tbl <- rhandsontable::renderRHandsontable({
@@ -891,6 +907,136 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
     },
     deleteFile = FALSE
   )
+
+  output$tut_design1 <- shiny::renderUI({
+    if (input$tutorial_mode) {
+      shiny::markdown(
+        "**Use the design table to specify groups/phases across the experiment**
+        - The 'Group-' button will remove a group from the table
+        - The 'Group+' button will add a group to the table
+        - The 'Phase-' button will remove a phase from the table
+        - The 'Phase+' button will add a phase to the table
+        - The 'Parse Design' button will parse the design in the table
+        - The 'Run Experiment' button will run the experiment
+        - The 'Save Results' will prompt a download of the simulation data"
+      )
+    }
+  })
+
+  output$tut_design2 <- shiny::renderUI({
+    if (input$tutorial_mode) {
+      list(
+        htmltools::br(),
+        shiny::markdown(
+          "Specify the trials in a phase using the following syntax:
+        - **Separate trials** within a phase with '/' (e.g., 10NL>(US)/10#L)
+        - **Specify repetitions first and stimuli after**
+        (e.g., 10N>(US) denotes 10 repetitions of the N>(US) trial)
+        - **Letters outside paretheses** denote multiple stimuli
+        (e.g,. NL is 'N' and 'L')
+        - **Letters inside parentheses** denote a single stimulus
+        (e.g., (US) is the 'US')
+        - **Specify probe trials**—in which the model responds
+        but does not learn—with '#' (e.g., 10#L)
+        - **Specify sequential trials** for time-based designs using '>'
+        (e.g., N>(US) implies 'N' is followed by the 'US')"
+        ),
+        shiny::markdown(
+          "The checkboxes determine whether the trials
+          within a phase should be randomized."
+        )
+      )
+    }
+  })
+
+  output$tut_parameters <- shiny::renderUI({
+    if (input$tutorial_mode) {
+      list(
+        shiny::markdown(
+          'Specify the model parameters below.
+        A description of the model parameters is available
+        <a href="https://victornavarro.org/calmr/articles/model_parameters.html"
+        target=_blank>here</a>.'
+        ),
+        shiny::markdown(
+          "Once you are happy with them,
+          go back up and press the 'Run Experiment' button.
+          Then, scroll to the bottom to see the results."
+        )
+      )
+    }
+  })
+
+  output$tut_results <- shiny::renderUI({
+    if (input$tutorial_mode) {
+      list(
+        shiny::markdown(
+          "Select the plots you want to see using the two dropdown menus below.
+          Most plots will be organized around trials/stimuli and faceted by
+          phase/trial type. Plots too small?
+          Try and expand them by pressing the 'expand'
+          button on the bottom right of the panel."
+        ),
+        shiny::markdown("
+          Plots are organized by group,
+          can be interacted with thanks to plotly, and
+          can be filtered using the 'Filters' side menu.")
+      )
+    }
+  })
+
+  output$tut_graphs <- shiny::renderUI({
+    if (input$tutorial_mode) {
+      list(
+        shiny::markdown(
+          "Select the graphs you want to see using the two dropdown menus below.
+          The graphs depict the associations within the model on a given trial."
+        ),
+        shiny::markdown("
+          Graphs are organized by group. Move the sliders below to change the trial
+          used to construct the graphs.")
+      )
+    }
+  })
+
+  output$tut_filters <- shiny::renderUI({
+    if (input$tutorial_mode && ran()) {
+      shiny::markdown(
+        "You can filter the data to construct the plots here.
+        Make sure to also check the 'Options' section below."
+      )
+    }
+  })
+
+  output$tut_options <- shiny::renderUI({
+    if (input$tutorial_mode) {
+      shiny::markdown(
+        "Adjust general options here,
+        such as the number of iterations to simulate,
+        the randomization of trials, etc."
+      )
+    }
+  })
+
+  output$tut_mod_selection <- shiny::renderUI({
+    if (input$tutorial_mode) {
+      list(
+        shiny::markdown(
+          "Choose the model you want to run here."
+        )
+      )
+    }
+  })
+
+  output$model_page_button <- shiny::renderText({
+    model <- input$model_selection
+    if (model == "HDI2020") {
+      model <- "HD2022"
+    }
+    sprintf('<a href="https://victornavarro.org/calmr/articles/%s.html"
+    target=_blank>
+    <i class="fa-solid fa-up-right-from-square"></i></a>', model)
+  })
 
   shiny::outputOptions(output, "parsed", suspendWhenHidden = FALSE)
   shiny::outputOptions(output, "ran", suspendWhenHidden = FALSE)
