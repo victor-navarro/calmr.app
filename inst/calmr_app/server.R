@@ -12,7 +12,9 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
   design_df <- shiny::reactiveVal(base_df)
   design <- shiny::reactiveVal()
   current_parameters <- shiny::reactiveVal()
+  current_timings <- shiny::reactiveVal()
   par_tables <- shiny::reactiveVal()
+  timing_tables <- shiny::reactiveVal()
   plots <- shiny::reactiveVal()
   graphs <- shiny::reactiveVal()
   selected_plots <- shiny::reactiveVal()
@@ -20,7 +22,11 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
   plot_options <- shiny::reactiveVal(base_plot_options)
   parsed <- shiny::reactiveVal(FALSE)
   needs_globalpars <- shiny::reactiveVal(FALSE)
-  needs_timing_pars <- shiny::reactiveVal(FALSE)
+  needs_timings <- shiny::reactiveVal(FALSE)
+  needs_global_timings <- shiny::reactiveVal(FALSE)
+  needs_trial_timings <- shiny::reactiveVal(FALSE)
+  needs_period_timings <- shiny::reactiveVal(FALSE)
+  needs_transition_timings <- shiny::reactiveVal(FALSE)
   ran <- shiny::reactiveVal(FALSE)
   experiment <- shiny::reactiveVal()
 
@@ -85,6 +91,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
       design(),
       model = input$model_selection
     )
+    # change current parameters
     current_parameters(new_params)
     # make parameter tables
     par_tables(make_par_tables(
@@ -96,9 +103,34 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
       input$model_selection,
       current_parameters()
     ))
-    # flip needs_timing_pars if necessary
-    needs_timing_pars(calmr:::.assert_timed_model(input$model_selection))
+    # flip needs_timings if necessary
+    needs_timings(
+      input$model_selection %in%
+        calmr::supported_timed_models()
+    )
+    # get timings
+    if (needs_timings()) {
+      if (debug) print("getting timings")
+      current_timings(calmr::get_timings(
+        design(),
+        model = input$model_selection
+      ))
+      needs_global_timings("global_timings" %in% names(current_timings()))
+      needs_trial_timings("trial_timings" %in% names(current_timings()))
+      needs_period_timings("period_timings" %in% names(current_timings()))
+      needs_transition_timings(
+        "transition_timings" %in%
+          names(current_timings())
+      )
 
+      # make timing tables
+      timing_tables(make_timing_tables(
+        current_timings()
+      ))
+    } else {
+      current_timings(NULL)
+      timing_tables(NULL)
+    }
     if (debug) print("done with parameters")
     # flip parsed
     parsed(TRUE)
@@ -313,9 +345,9 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
   })
 
   # Changes to the trial parameter table
-  shiny::observeEvent(input$timings_par_tbl$changes$changes, {
-    if (debug) print("changing timing parameters due to changes in table")
-    df <- rhandsontable::hot_to_r(input$timings_par_tbl)
+  shiny::observeEvent(input$trial_par_tbl$changes$changes, {
+    if (debug) print("changing trial parameters due to changes in table")
+    df <- rhandsontable::hot_to_r(input$trial_par_tbl)
     pars <- current_parameters()
     newpars <- df_to_parlist(df, type = "trial")
     pars[names(newpars)] <- newpars
@@ -394,10 +426,10 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
     return(needs_globalpars())
   })
 
-  # Trial parameters table
-  output$timings_par_tbl <- rhandsontable::renderRHandsontable({
-    if (debug) print("rendering trial parameters table")
-    if (!is.null(par_tables()$trial)) {
+  # Global timing parameters table
+  output$glob_time_par_tbl <- rhandsontable::renderRHandsontable({
+    if (debug) print("rendering global timing parameters table")
+    if (!is.null(timing_tables()$global_parameters)) {
       rhandsontable::rhandsontable(par_tables()$trial,
         rowHeaders = FALSE
       ) |>
@@ -406,8 +438,8 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
   })
 
   # To show trial parameters table
-  output$needs_timing_pars <- shiny::reactive({
-    return(needs_timing_pars())
+  output$needs_timings <- shiny::reactive({
+    return(needs_timings())
   })
 
   # Transition parameters table
@@ -472,11 +504,11 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
           ))
         )
       }
-      if (needs_timing_pars()) {
+      if (needs_timings()) {
         data <- c(
           data,
           list(trial_parameters = rhandsontable::hot_to_r(
-            input$timings_par_tbl
+            input$trial_par_tbl
           ))
         )
       }
@@ -498,7 +530,17 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
 
   shiny::outputOptions(output, "parsed", suspendWhenHidden = FALSE)
   shiny::outputOptions(output, "needs_globalpars", suspendWhenHidden = FALSE)
-  shiny::outputOptions(output, "needs_timing_pars", suspendWhenHidden = FALSE)
-  shiny::outputOptions(output, "needs_transpars", suspendWhenHidden = FALSE)
+  shiny::outputOptions(output, "needs_global_timings",
+    suspendWhenHidden = FALSE
+  )
+  shiny::outputOptions(output, "needs_trial_timings",
+    suspendWhenHidden = FALSE
+  )
+  shiny::outputOptions(output, "needs_period_timings",
+    suspendWhenHidden = FALSE
+  )
+  shiny::outputOptions(output, "needs_transition_timings",
+    suspendWhenHidden = FALSE
+  )
   shiny::outputOptions(output, "ran", suspendWhenHidden = FALSE)
 })

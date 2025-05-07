@@ -85,7 +85,7 @@ shinydashboard::dashboardPage(
             shiny::selectInput(
               inputId = "model_selection",
               label = "Model", choices = supported_models,
-              selected = "RW1972", multiple = FALSE
+              selected = "ANCCR", multiple = FALSE
             ),
             shiny::conditionalPanel(
               "output.parsed",
@@ -110,22 +110,44 @@ shinydashboard::dashboardPage(
               )
             ),
             shiny::conditionalPanel(
-              "output.parsed && output.needs_timing_pars",
-              htmltools::h5("Trial-specific parameters")
+              "output.parsed && output.needs_global_timings",
+              htmltools::h5("Global timing parameters")
             ),
             shiny::conditionalPanel(
-              "output.parsed && output.needs_timing_pars",
+              "output.parsed && output.needs_global_timings",
               rhandsontable::rHandsontableOutput(
-                "timings_par_tbl",
+                "trial_par_tbl",
                 width = "100%"
               )
             ),
             shiny::conditionalPanel(
-              "output.parsed && output.needs_transpars",
+              "output.parsed && output.needs_trial_timings",
+              htmltools::h5("Trial-specific parameters")
+            ),
+            shiny::conditionalPanel(
+              "output.parsed && output.needs_trial_timings",
+              rhandsontable::rHandsontableOutput(
+                "trial_par_tbl",
+                width = "100%"
+              )
+            ),
+            shiny::conditionalPanel(
+              "output.parsed && output.needs_period_timings",
+              htmltools::h5("Period-specific parameters")
+            ),
+            shiny::conditionalPanel(
+              "output.parsed && output.needs_period_timings",
+              rhandsontable::rHandsontableOutput(
+                "period_par_tbl",
+                width = "100%"
+              )
+            ),
+            shiny::conditionalPanel(
+              "output.parsed && output.needs_transition_timings",
               htmltools::h5("Transition-specific parameters")
             ),
             shiny::conditionalPanel(
-              "output.parsed && output.needs_transpars",
+              "output.parsed && output.needs_transition_timings",
               rhandsontable::rHandsontableOutput(
                 "trans_par_tbl",
                 width = "100%"
