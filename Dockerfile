@@ -1,8 +1,8 @@
-FROM rocker/r-ver:4.3.0
+FROM rocker/shiny
 
 Label MAINTAINER Victor Navarro
 
-RUN install2.r rsconnect htmltools openxlsx rhandsontable shiny shinyalert shinydashboard remotes
+RUN install2.r rsconnect htmltools openxlsx rhandsontable shiny shinyalert shinyjs bslib plotly remotes
 RUN installGithub.r victor-navarro/calmr victor-navarro/calmr.app
 WORKDIR /home/calmr.app
 COPY inst/deploy_app.R deploy_app.R

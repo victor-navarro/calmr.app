@@ -154,44 +154,14 @@ shinydashboard::dashboardPage(
               )
             )
           ),
-          shinydashboard::box(
-            collapsible = TRUE,
-            width = 12,
-            title = "Results",
-            shiny::conditionalPanel(
-              "output.ran",
-              align = "center",
-              shiny::selectInput(
-                inputId = "plot_selection",
-                label = NULL, choices = NA, multiple = TRUE
-              ),
-              shiny::plotOutput("plot")
-            )
+          bslib::accordion_panel(
+            "Filters",
+            shiny::uiOutput("tut_filters"),
+            shiny::uiOutput("filters")
           ),
-          shinydashboard::box(
-            collapsible = TRUE,
-            width = 12,
-            title = "Association Graphs",
-            shiny::conditionalPanel(
-              "output.ran",
-              shiny::sliderInput(
-                inputId = "graph_trial", label = "Trial",
-                min = 1, max = 1, value = 1, step = 1,
-                ticks = FALSE, width = "30%"
-              ),
-              shiny::plotOutput("graph")
-            )
-          )
-        )
-      ),
-      # Options tab content
-      shinydashboard::tabItem(
-        tabName = "options",
-        shiny::fluidPage(
-          shinydashboard::box(
-            collapsible = TRUE,
-            width = NULL,
-            title = "Simulation Options",
+          bslib::accordion_panel(
+            "Options",
+            shiny::uiOutput("tut_options"),
             shiny::sliderInput(
               inputId = "iterations",
               label = "Iterations", min = 1,
@@ -201,47 +171,137 @@ shinydashboard::dashboardPage(
               inputId = "miniblocks",
               label = "Create trial blocks",
               value = TRUE
+            ),
+            shiny::selectizeInput(
+              inputId = "plotting_palette",
+              label = "Plots palette",
+              choices = c("Viridis", "Hue")
             )
           ),
-          shinydashboard::box(
-            collapsible = TRUE,
-            width = NULL,
-            title = "Plotting Options",
+          bslib::card(
+            class = "accordion-item",
             shiny::checkboxInput(
-              inputId = "common_scale",
-              label = "Plot in common scale", value = TRUE
+              inputId = "tutorial_mode",
+              label = "Show help",
+              value = FALSE
             )
+          ),
+          shiny::imageOutput("logo",
+            width = "10vw", height = "auto",
+            inline = TRUE, fill = FALSE
           )
-        )
-      ),
-      shinydashboard::tabItem(
-        tabName = "about",
-        shiny::fluidPage(
-          htmltools::HTML(
-            '<center><img src="logo.png" width="20%"></center>'
-          ),
-          htmltools::br(), htmltools::br(),
-          htmltools::HTML('Canonical Associative Learning Models
-            and their Representations (calmr)
-          is developed by <a href="https://victornavarro.org" target="_blank">
-          Victor Navarro</a>.'),
-          htmltools::br(), htmltools::br(),
-          htmltools::HTML('To get access to the source code behind the package
+        ),
+        bslib::card(
+          full_screen = TRUE,
+          bslib::card_header("Design"),
+          bslib::card_body(
+            fillable = FALSE,
+            shiny::uiOutput("tut_design1"),
+            shiny::actionButton(
+              inputId = "grouprm",
+              label = "Group-", class = "xs"
+            ),
+            shiny::actionButton(
+              inputId = "groupadd",
+              label = "Group+"
+            ),
+            shiny::actionButton(
+              inputId = "phaserm",
+              label = "Phase-"
+            ),
+            shiny::actionButton(
+              inputId = "phaseadd",
+              label = "Phase+"
+            ),
+            shiny::actionButton(
+              inputId = "parse_design",
+              label = "Parse Design"
+            ),
+            shiny::actionButton(
+              inputId = "run_experiment",
+              label = "Run Experiment",
+              disabled = TRUE
+            ),
+            shiny::downloadButton("export_results", "Save Results",
+              icon = shiny::icon("file-download")
+            ),
+            htmltools::br(),
+            htmltools::br(),
+            rhandsontable::rHandsontableOutput("design_tbl"),
+            shiny::uiOutput("tut_design2")
+          )
+        ),
+        shiny::conditionalPanel(
+          "output.parsed",
+          bslib::card(
+            bslib::card_header("Parameters"),
+            full_screen = TRUE,
+            shiny::uiOutput("tut_parameters"),
+            shiny::uiOutput("parameter_ui")
+          )
+        ),
+        shiny::conditionalPanel(
+          "output.ran",
+          bslib::card(
+            bslib::card_header("Results"),
+            full_screen = TRUE,
+            shiny::uiOutput("tut_results"),
+            shiny::uiOutput("results_panel")
+          )
+        ),
+        shiny::conditionalPanel(
+          "output.ran",
+          bslib::card(
+            bslib::card_header("Association Graphs"),
+            full_screen = TRUE,
+            shiny::uiOutput("tut_graphs"),
+            shiny::uiOutput("graphs_panel")
+          )
+        ), fillable = FALSE
+      )
+    )
+  ),
+  bslib::nav_panel(
+    title = "About",
+    bslib::layout_column_wrap(
+      width = 1 / 3,
+      NULL,
+      bslib::card(
+        width = "20%",
+        htmltools::HTML(
+          '<center><img src="logo.png" width="25%"></center>'
+        ),
+        shiny::markdown(
+          "Canonical Associative Learning Models
+        and their Representations (calmr)
+        is developed by [Victor Navarro](https://victornavarro.org).
+
+        To get access to the source code behind the package
           (and this app), head over to the
-          <a href="https://github.com/victor-navarro/calmr"
-          target="_blank">GitHub repository</a>.'),
-          htmltools::br(), htmltools::br(),
-          htmltools::HTML(
-            'To consult the package documentation and other articles of
+          [github repository](https://github.com/victor-navarro/calmr).
+
+        To consult the package documentation and other articles of
           interest, head over to the
-          <a href="https://victornavarro.org/calmr/"
-          target="_blank">package site</a>.'
-          ),
-          htmltools::br(), htmltools::br(),
-          htmltools::p("Thanks for using the simulator."),
-          htmltools::p("Victor")
+          [package site](https://victornavarro.org/calmr/).
+
+
+        Thanks for using the simulator."
         )
       )
     )
+  ),
+  bslib::nav_spacer(),
+  bslib::nav_menu(
+    title = "Links",
+    align = "right",
+    bslib::nav_item(htmltools::tags$a("calmr on GitHub",
+      href = "https://github.com/victor-navarro/calmr"
+    )),
+    bslib::nav_item(htmltools::tags$a("calmr.app on Github",
+      href = "https://github.com/victor-navarro/calmr.app"
+    )),
+    bslib::nav_item(htmltools::tags$a("calmr on CRAN",
+      href = "https://cran.r-project.org/web/packages/calmr/"
+    ))
   )
 )
