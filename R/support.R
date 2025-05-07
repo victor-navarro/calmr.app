@@ -33,8 +33,9 @@
   ))
 }
 #' Parse timing parameter list into data.frames
-#' @param parameters A list with timings, as returned by `calmr::get_timings()`
+#' @param timings A list with timings, as returned by `calmr::get_timings()`
 #' @return A list with data.frames
+#' @noRd
 .make_timing_tables <- function(timings) {
   # As of calmr 0.7.0, the timing parameters
   # are either:
