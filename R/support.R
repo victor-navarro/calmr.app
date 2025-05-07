@@ -133,8 +133,8 @@ check_globalpars <- function(model, parameters) {
 }
 #' @export
 check_trialpars <- function(model, parameters) {
-  any(sapply(names(parameters),
-    calmr:::.is_trial_parameter,
+  !any(sapply(names(parameters),
+    calmr:::.is_global_parameter,
     model = model
   ))
 }

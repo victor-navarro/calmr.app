@@ -110,13 +110,13 @@ shinydashboard::dashboardPage(
               )
             ),
             shiny::conditionalPanel(
-              "output.parsed && output.needs_trialpars",
+              "output.parsed && output.needs_timing_pars",
               htmltools::h5("Trial-specific parameters")
             ),
             shiny::conditionalPanel(
-              "output.parsed && output.needs_trialpars",
+              "output.parsed && output.needs_timing_pars",
               rhandsontable::rHandsontableOutput(
-                "trial_par_tbl",
+                "timings_par_tbl",
                 width = "100%"
               )
             ),

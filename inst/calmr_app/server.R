@@ -20,8 +20,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
   plot_options <- shiny::reactiveVal(base_plot_options)
   parsed <- shiny::reactiveVal(FALSE)
   needs_globalpars <- shiny::reactiveVal(FALSE)
-  needs_trialpars <- shiny::reactiveVal(FALSE)
-  needs_transpars <- shiny::reactiveVal(FALSE)
+  needs_timing_pars <- shiny::reactiveVal(FALSE)
   ran <- shiny::reactiveVal(FALSE)
   experiment <- shiny::reactiveVal()
 
@@ -50,9 +49,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
   shiny::observeEvent(input$phaseadd, {
     if (debug) print("adding phase")
     df <- rhandsontable::hot_to_r(input$design_tbl)
-    cols <- ncol(df) - 1
-    df[, paste0("P", cols / 2 + 1)] <- ""
-    df[, paste0("R", cols / 2 + 1)] <- TRUE
+    df[, paste0("P", ncol(df))] <- ""
     design_df(df)
     parsed(FALSE)
     ran(FALSE)
@@ -62,7 +59,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
     if (debug) print("removing phase")
     df <- rhandsontable::hot_to_r(input$design_tbl)
     if (ncol(df) > 3) {
-      df <- df[, 1:(ncol(df) - 2)]
+      df <- df[, 1:(ncol(df) - 1)]
       design_df(df)
       parsed(FALSE)
       ran(FALSE)
@@ -80,7 +77,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
     if (debug) print("parsing")
     # parse design_df
     design_df(rhandsontable::hot_to_r(input$design_tbl))
-    design(calmr::parse_design(design_df(), model = input$model_selection))
+    design(calmr::parse_design(design_df()))
     # get parameters
     # but, keep parameters if there are compatible parameters already
     if (debug) print("getting parameters")
@@ -99,15 +96,9 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
       input$model_selection,
       current_parameters()
     ))
-    # flip needs_trialpars if necessary
-    needs_trialpars(check_trialpars(
-      input$model_selection,
-      current_parameters()
-    ))
-    needs_transpars(check_transpars(
-      input$model_selection,
-      current_parameters()
-    ))
+    # flip needs_timing_pars if necessary
+    needs_timing_pars(calmr:::.assert_timed_model(input$model_selection))
+
     if (debug) print("done with parameters")
     # flip parsed
     parsed(TRUE)
@@ -322,9 +313,9 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
   })
 
   # Changes to the trial parameter table
-  shiny::observeEvent(input$trial_par_tbl$changes$changes, {
-    if (debug) print("changing trial parameters due to changes in table")
-    df <- rhandsontable::hot_to_r(input$trial_par_tbl)
+  shiny::observeEvent(input$timings_par_tbl$changes$changes, {
+    if (debug) print("changing timing parameters due to changes in table")
+    df <- rhandsontable::hot_to_r(input$timings_par_tbl)
     pars <- current_parameters()
     newpars <- df_to_parlist(df, type = "trial")
     pars[names(newpars)] <- newpars
@@ -372,14 +363,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
   output$design_tbl <- rhandsontable::renderRHandsontable({
     if (debug) print("rendering design table")
     if (!is.null(design_df())) {
-      rhandsontable::rhandsontable(design_df(), rowHeaders = FALSE) |>
-        rhandsontable::hot_col(
-          col = seq(3, ncol(design_df()), 2), renderer = "
-           function (instance, td, row, col, prop, value, cellProperties) {
-             Handsontable.renderers.CheckboxRenderer.apply(this, arguments);
-              td.style.textAlign = 'center';
-           }"
-        )
+      rhandsontable::rhandsontable(design_df(), rowHeaders = FALSE)
     }
   })
 
@@ -411,7 +395,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
   })
 
   # Trial parameters table
-  output$trial_par_tbl <- rhandsontable::renderRHandsontable({
+  output$timings_par_tbl <- rhandsontable::renderRHandsontable({
     if (debug) print("rendering trial parameters table")
     if (!is.null(par_tables()$trial)) {
       rhandsontable::rhandsontable(par_tables()$trial,
@@ -422,8 +406,8 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
   })
 
   # To show trial parameters table
-  output$needs_trialpars <- shiny::reactive({
-    return(needs_trialpars())
+  output$needs_timing_pars <- shiny::reactive({
+    return(needs_timing_pars())
   })
 
   # Transition parameters table
@@ -488,11 +472,11 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
           ))
         )
       }
-      if (needs_trialpars()) {
+      if (needs_timing_pars()) {
         data <- c(
           data,
           list(trial_parameters = rhandsontable::hot_to_r(
-            input$trial_par_tbl
+            input$timings_par_tbl
           ))
         )
       }
@@ -514,7 +498,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
 
   shiny::outputOptions(output, "parsed", suspendWhenHidden = FALSE)
   shiny::outputOptions(output, "needs_globalpars", suspendWhenHidden = FALSE)
-  shiny::outputOptions(output, "needs_trialpars", suspendWhenHidden = FALSE)
+  shiny::outputOptions(output, "needs_timing_pars", suspendWhenHidden = FALSE)
   shiny::outputOptions(output, "needs_transpars", suspendWhenHidden = FALSE)
   shiny::outputOptions(output, "ran", suspendWhenHidden = FALSE)
 })
