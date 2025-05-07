@@ -6,7 +6,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
   shiny::updateSelectizeInput(
     inputId = "model_selection",
     choices = calmr::supported_models(),
-    selected = "ANCCR"
+    selected = "RW1972"
   )
   #### Reactive values ####
   design_df <- shiny::reactiveVal(calmr::get_design("controlled_blocking"))
