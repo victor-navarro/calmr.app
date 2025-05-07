@@ -1,156 +1,52 @@
-supported_models <- calmr::supported_models()
-shinydashboard::dashboardPage(
-  skin = "red",
-  shinydashboard::dashboardHeader(
-    title = "Calmr Simulator",
-    htmltools::tags$li(
-      htmltools::a("Help",
-        href = "https://victornavarro.org/calmr/articles/calmr_app.html",
-        target = "_blank",
-        title = "Help"
-      ),
-      class = "dropdown"
-    )
-  ),
-  shinydashboard::dashboardSidebar(
-    shinydashboard::sidebarMenu(
-      shinydashboard::menuItem("Home", tabName = "home"),
-      shinydashboard::menuItem("Options", tabName = "options"),
-      shinydashboard::menuItem("About", tabName = "about")
-    )
-  ),
-  shinydashboard::dashboardBody(
-    shinydashboard::tabItems(
-      # First tab content
-      shinydashboard::tabItem(
-        tabName = "home",
-        shiny::fluidRow(
-          # only tracks shinyapps website
-          htmltools::tags$head(
-            htmltools::includeHTML("google_analytics.html")
-          ),
-          shinydashboard::box(
-            width = 12,
-            title = "Design",
-            htmltools::div(
-              style = "float:left",
-              shiny::actionButton(
-                inputId = "grouprm",
-                label = "Group-", class = "btn-s"
-              ),
-              shiny::actionButton(
-                inputId = "groupadd",
-                label = "Group+", class = "btn-s"
-              ),
-              shiny::actionButton(
-                inputId = "phaserm",
-                label = "Phase-", class = "btn-s"
-              ),
-              shiny::actionButton(
-                inputId = "phaseadd",
-                label = "Phase+", class = "btn-s"
-              ),
-              shiny::actionButton(
-                inputId = "parse_design",
-                label = "Parse Design", class = "btn-s"
-              ),
-              htmltools::div(
-                style = "display:inline-block;",
-                shiny::conditionalPanel(
-                  "output.parsed",
-                  shiny::actionButton(
-                    inputId = "run_experiment",
-                    label = "Run Experiment", class = "btn-s"
-                  )
+rhandsontable_css <- ".handsontable {
+    overflow: hidden;
+}"
+
+nav_options <- bslib::navbar_options(
+  title = "Calmr App",
+  theme = "auto",
+  bg = "#d3374a",
+  font_scale = 1.2
+)
+
+bslib::page_navbar(
+  title = "Calmr Simulator",
+  navbar_options = nav_options,
+  bslib::nav_panel(
+    title = "Home",
+    shinyjs::useShinyjs(),
+    htmltools::tags$head(
+      htmltools::includeHTML("google_analytics.html")
+    ),
+    htmltools::tags$style(
+      htmltools::HTML(rhandsontable_css)
+    ),
+    bslib::card(
+      bslib::layout_sidebar(
+        sidebar = bslib::accordion(
+          id = "sidemenu",
+          multiple = FALSE,
+          bslib::accordion_panel(
+            "Model",
+            fillable = FALSE,
+            shiny::uiOutput("tut_mod_selection"),
+            shiny::fluidRow(
+              shiny::column(
+                10,
+                shiny::selectInput(
+                  inputId = "model_selection",
+                  label = NULL, choices = NULL,
+                  selected = "RW1972", multiple = FALSE
                 )
               ),
-              htmltools::div(
-                style = "display:inline-block;",
-                shiny::conditionalPanel(
-                  "output.ran",
-                  shiny::downloadButton("exportresults", "Save Data",
-                    icon = shiny::icon("file-download"), class = "btn-s"
-                  )
+              shiny::column(
+                2,
+                shiny::div(
+                  style = "margin-top:5px",
+                  shiny::htmlOutput("model_page_button")
+                ) |> bslib::tooltip(
+                  "Open model page in new tab"
                 )
-              )
-            ),
-            htmltools::br(), htmltools::br(),
-            rhandsontable::rHandsontableOutput("design_tbl", width = "100%"),
-            htmltools::br()
-          ),
-          shinydashboard::box(
-            collapsible = TRUE,
-            width = 12,
-            title = "Parameters",
-            shiny::selectInput(
-              inputId = "model_selection",
-              label = "Model", choices = supported_models,
-              selected = "ANCCR", multiple = FALSE
-            ),
-            shiny::conditionalPanel(
-              "output.parsed",
-              htmltools::h5("Stimulus-specific parameters")
-            ),
-            shiny::conditionalPanel(
-              "output.parsed",
-              rhandsontable::rHandsontableOutput(
-                "stim_par_tbl",
-                width = "100%"
-              )
-            ),
-            shiny::conditionalPanel(
-              "output.parsed && output.needs_globalpars",
-              htmltools::h5("Global parameters")
-            ),
-            shiny::conditionalPanel(
-              "output.parsed && output.needs_globalpars",
-              rhandsontable::rHandsontableOutput(
-                "glob_par_tbl",
-                width = "100%"
-              )
-            ),
-            shiny::conditionalPanel(
-              "output.parsed && output.needs_global_timings",
-              htmltools::h5("Global timing parameters")
-            ),
-            shiny::conditionalPanel(
-              "output.parsed && output.needs_global_timings",
-              rhandsontable::rHandsontableOutput(
-                "trial_par_tbl",
-                width = "100%"
-              )
-            ),
-            shiny::conditionalPanel(
-              "output.parsed && output.needs_trial_timings",
-              htmltools::h5("Trial-specific parameters")
-            ),
-            shiny::conditionalPanel(
-              "output.parsed && output.needs_trial_timings",
-              rhandsontable::rHandsontableOutput(
-                "trial_par_tbl",
-                width = "100%"
-              )
-            ),
-            shiny::conditionalPanel(
-              "output.parsed && output.needs_period_timings",
-              htmltools::h5("Period-specific parameters")
-            ),
-            shiny::conditionalPanel(
-              "output.parsed && output.needs_period_timings",
-              rhandsontable::rHandsontableOutput(
-                "period_par_tbl",
-                width = "100%"
-              )
-            ),
-            shiny::conditionalPanel(
-              "output.parsed && output.needs_transition_timings",
-              htmltools::h5("Transition-specific parameters")
-            ),
-            shiny::conditionalPanel(
-              "output.parsed && output.needs_transition_timings",
-              rhandsontable::rHandsontableOutput(
-                "trans_par_tbl",
-                width = "100%"
               )
             )
           ),
@@ -166,11 +62,17 @@ shinydashboard::dashboardPage(
               inputId = "iterations",
               label = "Iterations", min = 1,
               max = 200, value = 1, ticks = FALSE
+            ) |> bslib::tooltip(
+              "How many simulations to run"
             ),
             shiny::checkboxInput(
               inputId = "miniblocks",
               label = "Create trial blocks",
               value = TRUE
+            ) |> bslib::tooltip(
+              "Whether to intermix trials in miniblocks
+              (e.g., 10A/10B becomes ten repetitions of 1A/1B)
+              "
             ),
             shiny::selectizeInput(
               inputId = "plotting_palette",

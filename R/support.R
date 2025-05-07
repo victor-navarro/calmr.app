@@ -9,7 +9,7 @@
   spars <- !gpars
   spars <- !gpars
 
-  stimpars <- globpars <- NULL
+  stimpars <- glob_pars <- NULL
   if (any(spars)) {
     stimnames <- names(parameters[[which(spars)[1]]])
     stimpars <- data.frame(
@@ -20,66 +20,53 @@
   }
 
   if (any(gpars)) {
-    globpars <- data.frame(
+    glob_pars <- data.frame(
       parameter = parnames[gpars],
       value = as.numeric(unlist(parameters[parnames[gpars]]))
     )
-    names(globpars) <- tools::toTitleCase(names(globpars))
+    names(glob_pars) <- tools::toTitleCase(names(glob_pars))
   }
 
   return(list(
     stimulus = stimpars,
-    global = globpars
+    global = glob_pars
   ))
 }
 #' Parse timing parameter list into data.frames
 #' @param parameters A list with timings, as returned by `calmr::get_timings()`
 #' @return A list with data.frames
-#' @export
-make_timing_tables <- function(timings) {
-  browser()
+.make_timing_tables <- function(timings) {
   # As of calmr 0.7.0, the timing parameters
   # are either:
   # "trial_ts", "period_ts", or "transition_ts"
   # everything else is a global parameter.
-  needs_periodpars <- "period_ts" %in% names(timings)
-  needs_transitionpars <- "transition_ts" %in% names(timings)
-  glob_pars <- names(timings)[!names(timings) %in% c(
+  globals <- names(timings)[!names(timings) %in% c(
     "trial_ts", "period_ts", "transition_ts"
   )]
 
   glob_pars <- trial_pars <- period_pars <- transition_pars <- NULL
   # make global parameters table
-  if (length(glob_pars)) {
-    globpars <- data.frame(
-      parameter = glob_pars,
-      value = as.numeric(unlist(timings[glob_pars]))
+  if (length(globals)) {
+    glob_pars <- data.frame(
+      parameter = globals,
+      value = as.numeric(unlist(timings[globals]))
     )
-    names(globpars) <- stringr::str_to_title(names(globpars))
+    names(glob_pars) <- stringr::str_to_title(names(glob_pars))
   }
   if ("trial_ts" %in% names(timings)) {
-    trial_pars <- data.frame(
-      trial = names(timings$trial_ts),
-      value = as.numeric(unlist(timings$trial_ts))
-    )
+    trial_pars <- timings$trial_ts
     names(trial_pars) <- stringr::str_to_title(names(trial_pars))
   }
   if ("period_ts" %in% names(timings)) {
-    period_pars <- data.frame(
-      period = names(timings$period_ts),
-      value = as.numeric(unlist(timings$period_ts))
-    )
+    period_pars <- timings$period_ts
     names(period_pars) <- stringr::str_to_title(names(period_pars))
   }
   if ("transition_ts" %in% names(timings)) {
-    transition_pars <- data.frame(
-      transition = names(timings$transition_ts),
-      value = as.numeric(unlist(timings$transition_ts))
-    )
+    transition_pars <- timings$transition_ts
     names(transition_pars) <- stringr::str_to_title(names(transition_pars))
   }
   list(
-    global_timings = globpars,
+    global_timings = glob_pars,
     trial_timings = trial_pars,
     period_timings = period_pars,
     transition_timings = transition_pars

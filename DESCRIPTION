@@ -1,13 +1,13 @@
 Package: calmr.app
 Title: A shiny app for the calmr package
-Version: 0.0.0.9000
+Version: 0.1.0
 Authors@R: 
     person("Victor", "Navarro", , "navarrov@cardiff.ac.uk", role = c("aut", "cre"))
 Description: A visual interface to run simulations using associative learning models.
 License: GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.1
+RoxygenNote: 7.3.2
 Imports: 
     calmr (>= 0.5.1),
     htmltools,
