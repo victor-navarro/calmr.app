@@ -1,6 +1,6 @@
 library(calmr.app)
 # whether to print debugging messages
-debug <- FALSE
+debug_mode <- FALSE
 
 shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
   shiny::updateSelectizeInput(
@@ -22,6 +22,8 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
   graphs <- shiny::reactiveVal()
   current_graph1 <- shiny::reactiveVal()
   current_graph2 <- shiny::reactiveVal()
+  # whether to show 2nd graph for 1group experiment
+  show_comparison_graph <- shiny::reactiveVal(FALSE)
   sim_options <- shiny::reactiveVal(list(iterations = 1, miniblocks = TRUE))
   parsed <- shiny::reactiveVal(FALSE)
   needs_globalpars <- shiny::reactiveVal(FALSE)
@@ -42,7 +44,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
 
   #### Input Logic ####
   shiny::observeEvent(input$groupadd, {
-    if (debug) print("adding group")
+    if (debug_mode) print("adding group")
     df <- rhandsontable::hot_to_r(input$design_tbl)
     df[nrow(df) + 1, ] <- df[nrow(df), ]
     df[nrow(df), 1] <- paste("Group", nrow(df))
@@ -51,7 +53,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
     ran(FALSE)
   })
   shiny::observeEvent(input$grouprm, {
-    if (debug) print("removing group")
+    if (debug_mode) print("removing group")
     df <- rhandsontable::hot_to_r(input$design_tbl)
     if (nrow(df) > 1) {
       df <- df[1:(nrow(df) - 1), ]
@@ -61,7 +63,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
     }
   })
   shiny::observeEvent(input$phaseadd, {
-    if (debug) print("adding phase")
+    if (debug_mode) print("adding phase")
     df <- rhandsontable::hot_to_r(input$design_tbl)
     df[, paste0("P", ncol(df))] <- ""
     design_df(df)
@@ -69,17 +71,17 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
     ran(FALSE)
   })
   shiny::observeEvent(input$phaserm, {
-    if (debug) print("removing phase")
     df <- rhandsontable::hot_to_r(input$design_tbl)
-    if (ncol(df) > 3) {
-      df <- df[, 1:(ncol(df) - 1)]
+    if (ncol(df) > 2) {
+      if (debug_mode) print("removing phase")
+      df <- df[, -ncol(df)]
       design_df(df)
       parsed(FALSE)
       ran(FALSE)
     }
   })
   shiny::observeEvent(input$model_selection, {
-    if (debug) print("reset due to model selection")
+    if (debug_mode) print("reset due to model selection")
     if (!(input$model_selection %in% calmr::supported_timed_models())) {
       current_timings(NULL)
     }
@@ -88,13 +90,13 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
   })
   shiny::observeEvent(input$parse_design, {
     # get old stimuli (for parameter retention)
-    if (debug) print("parsing")
+    if (debug_mode) print("parsing")
     # parse design_df
     design_df(rhandsontable::hot_to_r(input$design_tbl))
     design(calmr::parse_design(design_df()))
     # get parameters
     # but, keep parameters if there are compatible parameters already
-    if (debug) print("getting parameters")
+    if (debug_mode) print("getting parameters")
     new_params <- calmr::get_parameters(
       design(),
       model = input$model_selection
@@ -118,7 +120,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
     )
     # get timings
     if (needs_timings()) {
-      if (debug) print("getting timings")
+      if (debug_mode) print("getting timings")
       current_timings(calmr::get_timings(
         design(),
         model = input$model_selection
@@ -143,13 +145,13 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
       current_timings(NULL)
       timing_tables(NULL)
     }
-    if (debug) print("done with parameters")
+    if (debug_mode) print("done with parameters")
     # flip parsed
     parsed(TRUE)
   })
 
   shiny::observeEvent(input$run_experiment, {
-    if (debug) print("running experiment")
+    if (debug_mode) print("running experiment")
     tryCatch(
       {
         # expected experiment size
@@ -161,11 +163,13 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
           )
         }
 
-        if (debug) {
+        if (debug_mode) {
           print("running with parameters...")
           print(current_parameters())
-          print("running with timings...")
-          print(current_timings())
+          if (needs_timings()) {
+            print("running with timings...")
+            print(current_timings())
+          }
         }
 
         shiny::withProgress(message = "Sampling trials...", value = 0, {
@@ -198,11 +202,11 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
             1 / n_outputs
           )
         }
-        if (debug) print("experiment ran")
+        if (debug_mode) print("experiment ran")
         shiny::withProgress(message = "Aggregating results...", value = 0, {
           experiment <- calmr::aggregate(experiment)
         })
-        if (debug) print("experiment aggregated")
+        if (debug_mode) print("experiment aggregated")
         experiment(experiment)
         plot_experiment(experiment) # make a copy for plotting
         ran(TRUE)
@@ -225,14 +229,14 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
 
   #### Options Logic ####
   shiny::observeEvent(input$iterations, {
-    if (debug) print("changing iterations option")
+    if (debug_mode) print("changing iterations option")
     sopts <- sim_options()
     sopts$iterations <- input$iterations
     sim_options(sopts)
   })
 
   shiny::observeEvent(input$miniblocks, {
-    if (debug) print("changing miniblocks option")
+    if (debug_mode) print("changing miniblocks option")
     sopts <- sim_options()
     sopts$miniblocks <- input$miniblocks
     sim_options(sopts)
@@ -249,7 +253,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
 
   # populating the phase options upon design change
   shiny::observeEvent(design(), {
-    if (debug) print("populating phase options due to design change")
+    if (debug_mode) print("populating phase options due to design change")
     if (!is.null(design())) {
       avail_phases(unique(sapply(design()@design, "[[", "phase")))
       avail_trials(design()@mapping$trial_names)
@@ -260,7 +264,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
   # populating the plot selections upon plots change
   shiny::observeEvent(plots(), {
     if (!is.null(plots())) {
-      if (debug) print("populating plot selections")
+      if (debug_mode) print("populating plot selections")
       pnames <- names(plots())
       # we must check whether something is already selected
       if (!(input$plot1_sel %in% pnames)) {
@@ -289,7 +293,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
   # make plots on plot_experiment change
   shiny::observeEvent(plot_experiment(), {
     if (!is.null(plot_experiment())) {
-      if (debug) print("making plots")
+      if (debug_mode) print("making plots")
       shiny::withProgress(message = "Making plots...", {
         plots(calmr::plot(plot_experiment()))
         shiny::setProgress(1)
@@ -299,7 +303,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
 
   # putting current plots on plots() change
   shiny::observeEvent(plots(), {
-    if (debug) print("putting plots based on selections")
+    if (debug_mode) print("putting plots based on selections")
     # make selection
     if (input$plot1_sel != "") {
       current_plot1(plots()[[input$plot1_sel]])
@@ -316,11 +320,11 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
   # remaking plots on colour/fill scale change
   shiny::observeEvent(input$plotting_palette, {
     if (input$plotting_palette != "") {
-      if (debug) print("changing plotting palette")
+      if (debug_mode) print("changing plotting palette")
       calmr::set_calmr_palette(tolower(input$plotting_palette))
       # replot if ready
       if (!is.null(plot_experiment())) {
-        if (debug) print("making plots")
+        if (debug_mode) print("making plots")
         shiny::withProgress(message = "Making plots...", {
           plots(calmr::plot(plot_experiment()))
           shiny::setProgress(1)
@@ -331,7 +335,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
 
   # remaking plot1 on selection change
   shiny::observeEvent(input$plot1_sel, {
-    if (debug) print("remaking plot1 due to selection change")
+    if (debug_mode) print("remaking plot1 due to selection change")
     if (input$plot1_sel != "") {
       new_plots <- calmr::plot(experiment())
       current_plot1(new_plots[[input$plot1_sel]])
@@ -340,7 +344,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
 
   # remaking plot2 on selection change
   shiny::observeEvent(input$plot2_sel, {
-    if (debug) print("remaking plot2 due to selection change")
+    if (debug_mode) print("remaking plot2 due to selection change")
     if (input$plot2_sel != "") {
       new_plots <- calmr::plot(experiment())
       current_plot2(new_plots[[input$plot2_sel]])
@@ -359,7 +363,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
       stim_f = input$stim_selection
     )
     if (all(!sapply(filters, is.null))) {
-      if (debug) print("filtering data upon filter change")
+      if (debug_mode) print("filtering data upon filter change")
       plot_experiment(calmr.app:::.filter_experiment(
         experiment(),
         filters
@@ -370,13 +374,22 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
   # make graph on experiment run
   shiny::observeEvent(experiment(), {
     if (!is.null(experiment())) {
-      if (debug) print("making graphs")
+      if (debug_mode) print("making graphs")
       shiny::withProgress(message = "Making graphs...", {
         graphs(unlist(unname(calmr::graph(experiment())),
           recursive = FALSE
         ))
-        current_graph1(graphs()[1])
-        current_graph2(graphs()[1])
+        # check if we need to maintain current selections
+        if (input$graph1_sel %in% names(graphs())) {
+          current_graph1(graphs()[[input$graph1_sel]])
+        } else {
+          current_graph1(graphs()[[1]])
+        }
+        if (input$graph2_sel %in% names(graphs())) {
+          current_graph2(graphs()[[input$graph2_sel]])
+        } else {
+          current_graph2(graphs()[[1]])
+        }
         shiny::setProgress(1)
       })
     }
@@ -385,7 +398,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
   # remaking graph1 on trial change
   shiny::observeEvent(input$graph1_trial, {
     if (!is.null(current_graph1())) {
-      if (debug) print("remaking graph1 due to slider change")
+      if (debug_mode) print("remaking graph1 due to slider change")
       if (input$graph1_sel != "") {
         new_graphs <- unlist(
           unname(calmr::graph(experiment(),
@@ -401,7 +414,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
   # remaking graph2 on trial change
   shiny::observeEvent(input$graph2_trial, {
     if (!is.null(graphs())) {
-      if (debug) print("remaking graph2 due to slider change")
+      if (debug_mode) print("remaking graph2 due to slider change")
       if (input$graph2_sel != "") {
         new_graphs <- unlist(
           unname(calmr::graph(experiment(),
@@ -417,7 +430,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
   # remaking graph1 on selection change
   shiny::observeEvent(input$graph1_sel, {
     if (!is.null(graphs())) {
-      if (debug) print("remaking graph1 due to selection change")
+      if (debug_mode) print("remaking graph1 due to selection change")
       if (input$graph1_sel != "") {
         new_graphs <- unlist(
           unname(calmr::graph(experiment(),
@@ -433,7 +446,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
   # remaking graph2 on selection change
   shiny::observeEvent(input$graph2_sel, {
     if (!is.null(graphs())) {
-      if (debug) print("remaking graph2 due to selection change")
+      if (debug_mode) print("remaking graph2 due to selection change")
       if (input$graph2_sel != "") {
         new_graphs <- unlist(
           unname(calmr::graph(experiment(),
@@ -448,7 +461,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
 
   # Changes to the stimulus parameter table
   shiny::observeEvent(input$stim_par_tbl$changes$changes, {
-    if (debug) print("changing stimulus parameters due to changes in table")
+    if (debug_mode) print("changing stimulus parameters due to changes in table")
     df <- rhandsontable::hot_to_r(input$stim_par_tbl)
     pars <- current_parameters()
     newpars <- calmr.app:::.df_to_parlist(df, type = "stimulus")
@@ -464,7 +477,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
 
   # Changes to the global parameter table
   shiny::observeEvent(input$glob_par_tbl$changes$changes, {
-    if (debug) print("changing global parameters due to changes in table")
+    if (debug_mode) print("changing global parameters due to changes in table")
     df <- rhandsontable::hot_to_r(input$glob_par_tbl)
     pars <- current_parameters()
     newpars <- calmr.app:::.df_to_parlist(df, type = "global")
@@ -480,7 +493,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
 
   # Changes to the timings:trial parameter table
   shiny::observeEvent(input$trial_par_tbl$changes$changes, {
-    if (debug) print("changing trial parameters due to changes in table")
+    if (debug_mode) print("changing trial parameters due to changes in table")
     tims <- current_timings()
     tims$trial_ts[] <- rhandsontable::hot_to_r(input$trial_par_tbl)
     current_timings(tims)
@@ -493,7 +506,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
 
   # Changes to the timings:period parameter table
   shiny::observeEvent(input$period_par_tbl$changes$changes, {
-    if (debug) print("changing period parameters due to changes in table")
+    if (debug_mode) print("changing period parameters due to changes in table")
     tims <- current_timings()
     tims$period_ts[] <- rhandsontable::hot_to_r(input$period_par_tbl)
     current_timings(tims)
@@ -506,7 +519,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
 
   # Changes to the timings:transitions parameter table
   shiny::observeEvent(input$trans_par_tbl$changes$changes, {
-    if (debug) print("changing transition parameters due to changes in table")
+    if (debug_mode) print("changing transition parameters due to changes in table")
     tims <- current_timings()
     tims$transition_ts[] <- rhandsontable::hot_to_r(input$trans_par_tbl)
     current_timings(tims)
@@ -519,7 +532,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
 
   # Changes to the timings:global parameter table
   shiny::observeEvent(input$glob_time_par_tbl$changes$changes, {
-    if (debug) print("changing time glob pars due to changes in table")
+    if (debug_mode) print("changing time glob pars due to changes in table")
     tims <- current_timings()
     df <- calmr.app:::.df_to_parlist(
       rhandsontable::hot_to_r(input$glob_time_par_tbl),
@@ -536,7 +549,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
 
   # Changes to the design_df table
   shiny::observeEvent(input$design_tbl$changes$changes, {
-    if (debug) print("changing design due to changes in table")
+    if (debug_mode) print("changing design due to changes in table")
     design_df(rhandsontable::hot_to_r(input$design_tbl))
     parsed(FALSE)
     ran(FALSE)
@@ -545,7 +558,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
   #### Outputs ####
   # Design table
   output$design_tbl <- rhandsontable::renderRHandsontable({
-    if (debug) print("rendering design table")
+    if (debug_mode) print("rendering design table")
     if (!is.null(design_df())) {
       rhandsontable::rhandsontable(design_df(), rowHeaders = FALSE)
     }
@@ -553,7 +566,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
 
   # Stimulus parameters table
   output$stim_par_tbl <- rhandsontable::renderRHandsontable({
-    if (debug) print("rendering stimulus parameters table")
+    if (debug_mode) print("rendering stimulus parameters table")
     if (!is.null(par_tables()$stimulus)) {
       rhandsontable::rhandsontable(par_tables()$stimulus,
         rowHeaders = FALSE
@@ -564,7 +577,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
 
   # Global parameters table
   output$glob_par_tbl <- rhandsontable::renderRHandsontable({
-    if (debug) print("rendering global parameters table")
+    if (debug_mode) print("rendering global parameters table")
     if (!is.null(par_tables()$global)) {
       rhandsontable::rhandsontable(par_tables()$global,
         rowHeaders = FALSE
@@ -586,7 +599,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
 
   # Trial timing parameters table
   output$trial_par_tbl <- rhandsontable::renderRHandsontable({
-    if (debug) print("rendering trial parameters table")
+    if (debug_mode) print("rendering trial parameters table")
     if (!is.null(timing_tables()$trial_timings)) {
       rhandsontable::rhandsontable(timing_tables()$trial_timings,
         rowHeaders = FALSE, wordWrap = FALSE
@@ -599,7 +612,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
 
   # Period timing parameters table
   output$period_par_tbl <- rhandsontable::renderRHandsontable({
-    if (debug) print("rendering period parameters table")
+    if (debug_mode) print("rendering period parameters table")
     if (!is.null(timing_tables()$period_timings)) {
       rhandsontable::rhandsontable(timing_tables()$period_timings,
         rowHeaders = FALSE, wordWrap = FALSE
@@ -612,7 +625,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
 
   # Transition timing parameters table
   output$trans_par_tbl <- rhandsontable::renderRHandsontable({
-    if (debug) print("rendering trans parameters table")
+    if (debug_mode) print("rendering trans parameters table")
     if (!is.null(timing_tables()$transition_timings)) {
       rhandsontable::rhandsontable(timing_tables()$transition_timings,
         rowHeaders = FALSE, wordWrap = FALSE
@@ -625,7 +638,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
 
   # Global timing parameters table
   output$glob_time_par_tbl <- rhandsontable::renderRHandsontable({
-    if (debug) print("rendering global timing parameters table")
+    if (debug_mode) print("rendering global timing parameters table")
     if (!is.null(timing_tables()$global_timings)) {
       rhandsontable::rhandsontable(timing_tables()$global_timings,
         rowHeaders = FALSE, wordWrap = FALSE
@@ -760,7 +773,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
 
   output$plot_1 <- plotly::renderPlotly({
     if (!is.null(current_plot1())) {
-      if (debug) print("rendering plot1")
+      if (debug_mode) print("rendering plot1")
       shiny::withProgress(message = "Rendering plot 1 ...", {
         p <- plotly::ggplotly(current_plot1())
         shiny::incProgress(1)
@@ -771,7 +784,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
 
   output$plot_2 <- plotly::renderPlotly({
     if (!is.null(current_plot2())) {
-      if (debug) print("rendering plot2")
+      if (debug_mode) print("rendering plot2")
       shiny::withProgress(message = "Rendering plot 2 ...", {
         p <- plotly::ggplotly(current_plot2())
         shiny::incProgress(1)
@@ -782,7 +795,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
 
   output$graph1 <- shiny::renderPlot({
     if (!is.null(current_graph1())) {
-      if (debug) print("rendering graph1")
+      if (debug_mode) print("rendering graph1")
       shiny::withProgress(message = "Rendering graph 1 ...", {
         g <- current_graph1()
         shiny::incProgress(1)
@@ -792,7 +805,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
   })
 
   output$graph2 <- shiny::renderPlot({
-    if (debug) print("rendering graph2")
+    if (debug_mode) print("rendering graph2")
     if (!is.null(current_graph2())) {
       shiny::withProgress(message = "Rendering graph 2 ...", {
         g <- current_graph2()
@@ -804,7 +817,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
 
   # UI for results
   output$results_panel <- shiny::renderUI({
-    if (debug) print("creating results panel")
+    if (debug_mode) print("creating results panel")
     bslib::layout_column_wrap(
       width = 1 / 2,
       bslib::card(
@@ -826,57 +839,54 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
 
   # UI for graphs panel
   output$graphs_panel <- shiny::renderUI({
-    card2 <- NULL
-    if (nrow(design_df()) > 1) {
-      if (debug) print("creating second graph panel")
-      card2 <- bslib::card(
-        class = "align-items-center",
-        shiny::selectizeInput("graph2_sel",
-          label = NULL, choices = NULL, width = "100%"
-        ),
-        shiny::sliderInput(
-          inputId = "graph2_trial",
-          label = "Trial", ticks = FALSE, width = "100%",
-          min = 1, max = 1, value = 1, step = 1
-        ),
-        bslib::card(
-          class = "align-items-center",
-          shiny::plotOutput("graph2",
-            height = "100%",
-            width = "100%"
-          )
-        )
-      )
-    }
-    if (debug) print("assembling panels")
-    bslib::layout_column_wrap(
-      width = 1 / 2,
+    if (debug_mode) print("assembling graph panels")
+    card1 <- bslib::card(
+      class = "align-items-center",
+      shiny::selectizeInput("graph1_sel",
+        label = NULL, choices = NULL, width = "100%"
+      ),
+      shiny::sliderInput(
+        inputId = "graph1_trial",
+        label = "Trial", ticks = FALSE, width = "100%",
+        min = 1, max = 1, value = 1, step = 1
+      ),
       bslib::card(
         class = "align-items-center",
-        shiny::selectizeInput("graph1_sel",
-          label = NULL, choices = NULL, width = "100%"
-        ),
-        shiny::sliderInput(
-          inputId = "graph1_trial",
-          label = "Trial", ticks = FALSE, width = "100%",
-          min = 1, max = 1, value = 1, step = 1
-        ),
-        bslib::card(
-          class = "align-items-center",
-          shiny::plotOutput("graph1",
-            height = "100%",
-            width = "100%"
-          )
+        shiny::plotOutput("graph1",
+          height = "100%",
+          width = "100%"
         )
+      )
+    )
+    card2 <- bslib::card(
+      class = "align-items-center",
+      shiny::selectizeInput("graph2_sel",
+        label = NULL, choices = NULL, width = "100%"
       ),
-      card2
+      shiny::sliderInput(
+        inputId = "graph2_trial",
+        label = "Trial", ticks = FALSE, width = "100%",
+        min = 1, max = 1, value = 1, step = 1
+      ),
+      bslib::card(
+        class = "align-items-center",
+        shiny::plotOutput("graph2",
+          height = "100%",
+          width = "100%"
+        )
+      )
+    )
+    bslib::layout_column_wrap(
+      width = 1 / 2,
+      card1,
+      card2,
     )
   })
 
   # populating the graph selections and trials upon experiment change
   shiny::observeEvent(experiment(), {
     if (!is.null(graphs())) {
-      if (debug) print("populating graph selectors and sliders 1")
+      if (debug_mode) print("populating graph selectors and sliders 1")
       gnames <- names(graphs())
       shiny::updateSelectizeInput(
         inputId = "graph1_sel",
@@ -889,19 +899,18 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
         group_number = 1,
         experiment = experiment()
       )
-      if (length(graphs()) > 1) {
-        if (debug) print("populating graph selectors and sliders 2")
-        shiny::updateSelectizeInput(
-          inputId = "graph2_sel",
-          selected = gnames[2],
-          choices = gnames
-        )
-        calmr.app:::.update_trial_slider(
-          slider_id = "graph2_trial",
-          group_number = 2,
-          experiment = experiment()
-        )
-      }
+      g2idx <- ifelse(length(gnames) > 1, 2, 1) # to allow for 1 group
+      if (debug_mode) print("populating graph selectors and sliders 2")
+      shiny::updateSelectizeInput(
+        inputId = "graph2_sel",
+        selected = gnames[g2idx],
+        choices = gnames
+      )
+      calmr.app:::.update_trial_slider(
+        slider_id = "graph2_trial",
+        group_number = g2idx,
+        experiment = experiment()
+      )
     }
   })
 
@@ -948,9 +957,9 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
         (e.g., (US) is the 'US')
         - **Specify probe trials**—in which the model responds
         but does not learn—with '#' (e.g., 10#L)
-        - **Specify sequential trials** for time-based designs using '>'
-        (e.g., N>(US) implies 'N' is followed by the 'US')
-        - **Specify that trials should be randomized** using '!' *e.g., 10!A/B)"
+        - **Specify sequential trials** for time-based and directional
+        models using '>' (e.g., N>(US) implies 'N' is followed by the 'US')
+        - **Specify that trials should be randomized** using '!' (e.g., 10!A/B)"
         )
       )
     }

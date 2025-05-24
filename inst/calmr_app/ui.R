@@ -9,6 +9,11 @@ nav_options <- bslib::navbar_options(
   font_scale = 1.2
 )
 
+ttip_options <- list(delay = 250)
+
+calmr_app_version <- utils::packageVersion("calmr.app")
+calmr_version <- utils::packageVersion("calmr")
+
 bslib::page_navbar(
   title = "Calmr Simulator",
   navbar_options = nav_options,
@@ -45,7 +50,8 @@ bslib::page_navbar(
                   style = "margin-top:5px",
                   shiny::htmlOutput("model_page_button")
                 ) |> bslib::tooltip(
-                  "Open model page in new tab"
+                  "Open model page in new tab",
+                  options = ttip_options
                 )
               )
             )
@@ -63,7 +69,8 @@ bslib::page_navbar(
               label = "Iterations", min = 1,
               max = 200, value = 1, ticks = FALSE
             ) |> bslib::tooltip(
-              "How many simulations to run"
+              "How many simulations to run",
+              options = ttip_options
             ),
             shiny::checkboxInput(
               inputId = "miniblocks",
@@ -72,7 +79,8 @@ bslib::page_navbar(
             ) |> bslib::tooltip(
               "Whether to intermix trials in miniblocks
               (e.g., 10A/10B becomes ten repetitions of 1A/1B)
-              "
+              ",
+              options = ttip_options
             ),
             shiny::selectizeInput(
               inputId = "plotting_palette",
@@ -91,7 +99,18 @@ bslib::page_navbar(
           shiny::imageOutput("logo",
             width = "10vw", height = "auto",
             inline = TRUE, fill = FALSE
-          )
+          ),
+          bslib::card(
+            class = "accordion-item",
+            shiny::helpText(
+              shiny::HTML(
+                "<center>",
+                paste0("calmr.app v", as.character(calmr_app_version), " - "),
+                paste0("calmr v", as.character(calmr_version)),
+                "</center>"
+              ),
+            )
+          ),
         ),
         bslib::card(
           full_screen = TRUE,
@@ -163,6 +182,21 @@ bslib::page_navbar(
       )
     )
   ),
+  bslib::nav_menu(
+    title = "Links",
+    bslib::nav_item(htmltools::tags$a("calmr website",
+      href = "https://victornavarro.org/calmr"
+    )),
+    bslib::nav_item(htmltools::tags$a("calmr on GitHub",
+      href = "https://github.com/victor-navarro/calmr"
+    )),
+    bslib::nav_item(htmltools::tags$a("calmr.app on Github",
+      href = "https://github.com/victor-navarro/calmr.app"
+    )),
+    bslib::nav_item(htmltools::tags$a("calmr on CRAN",
+      href = "https://cran.r-project.org/web/packages/calmr/"
+    ))
+  ),
   bslib::nav_panel(
     title = "About",
     bslib::layout_column_wrap(
@@ -178,32 +212,12 @@ bslib::page_navbar(
         and their Representations (calmr)
         is developed by [Victor Navarro](https://victornavarro.org).
 
-        To get access to the source code behind the package
-          (and this app), head over to the
-          [github repository](https://github.com/victor-navarro/calmr).
+        If you have any suggestions, questions, or issues,
+        drop me a line at navarrov@cardiff.ac.uk.
 
-        To consult the package documentation and other articles of
-          interest, head over to the
-          [package site](https://victornavarro.org/calmr/).
-
-
-        Thanks for using the simulator."
+        Thank you for using the simulator."
         )
       )
     )
-  ),
-  bslib::nav_spacer(),
-  bslib::nav_menu(
-    title = "Links",
-    align = "right",
-    bslib::nav_item(htmltools::tags$a("calmr on GitHub",
-      href = "https://github.com/victor-navarro/calmr"
-    )),
-    bslib::nav_item(htmltools::tags$a("calmr.app on Github",
-      href = "https://github.com/victor-navarro/calmr.app"
-    )),
-    bslib::nav_item(htmltools::tags$a("calmr on CRAN",
-      href = "https://cran.r-project.org/web/packages/calmr/"
-    ))
   )
 )
