@@ -4,7 +4,6 @@
 * Fixed bug associated with selection of graphs upon re-running an experiment.
 * Fixed bug associated with graph menu selection in experiments with one group.
 * Added version for `calmr.app` and `calmr` to the GUI.
-* Added a tab with `calmr` changelog.
 
 # calmr.app 0.1.0
 
