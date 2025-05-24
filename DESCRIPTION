@@ -1,6 +1,6 @@
 Package: calmr.app
 Title: A shiny app for the calmr package
-Version: 0.1.0
+Version: 0.1.1
 Authors@R: 
     person("Victor", "Navarro", , "navarrov@cardiff.ac.uk", role = c("aut", "cre"))
 Description: A visual interface to run simulations using associative learning models.
