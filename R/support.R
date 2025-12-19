@@ -5,8 +5,8 @@
 #' @noRd
 .make_par_tables <- function(model, parameters, timings) {
   parnames <- names(parameters)
-  gpars <- sapply(parnames, calmr:::.is_global_parameter, model = model)
-  spars <- !gpars
+  # mark global parameters
+  gpars <- calmr::model_parameters(model)$is_global
   spars <- !gpars
 
   stimpars <- glob_pars <- NULL
@@ -27,10 +27,10 @@
     names(glob_pars) <- tools::toTitleCase(names(glob_pars))
   }
 
-  return(list(
+  list(
     stimulus = stimpars,
     global = glob_pars
-  ))
+  )
 }
 #' Parse timing parameter list into data.frames
 #' @param timings A list with timings, as returned by `calmr::get_timings()`
@@ -99,11 +99,9 @@
   }
   pars
 }
+
 .check_globalpars <- function(model, parameters) {
-  any(sapply(names(parameters),
-    calmr:::.is_global_parameter,
-    model = model
-  ))
+  any(calmr::model_parameters(model)$is_global)
 }
 
 
@@ -142,6 +140,6 @@
       }
     }
   )
-  experiment@results@aggregated_results <- res
+  experiment@results <- res
   experiment
 }
