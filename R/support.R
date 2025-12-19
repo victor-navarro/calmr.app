@@ -156,7 +156,6 @@
   imps <- imps[grepl("calmr", imps)]
   # extract version requirement
   required_calmr_version <- gsub(".*>= *([0-9\\.]+).*", "\\1", imps)
-  required_calmr_version <- "0.9.0"
   if (utils::compareVersion(calmr_version, required_calmr_version) >= 0) {
     msg <- ""
   } else {
