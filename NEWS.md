@@ -1,4 +1,5 @@
 # calmr.app 0.1.2
+
 * Compatibility with calmr `0.8.1`
 * Fixed bug when displaying graphs.
 * Bumped `calmr` version in DESCRIPTION.

@@ -1,6 +1,6 @@
 library(calmr.app)
 # whether to print debugging messages
-debug_mode <- TRUE
+debug_mode <- FALSE
 
 shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
   shiny::updateSelectizeInput(
@@ -959,7 +959,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
         but does not learn—with '#' (e.g., 10#L)
         - **Specify sequential trials** for time-based and directional
         models using '>' (e.g., N>(US) implies 'N' is followed by the 'US')
-        - **Specify that trials should be randomized** using '!' (e.g., 10!A/B)"
+        - **Specify that trials should be randomized** using '!' (e.g., !3A/3B)"
         )
       )
     }

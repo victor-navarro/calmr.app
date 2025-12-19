@@ -143,3 +143,28 @@
   experiment@results <- res
   experiment
 }
+
+
+#' Get version mismatch warning message
+#' Returns a character string with the warning message
+#' @noRd
+.get_version_warning <- function() {
+  calmr_version <- as.character(utils::packageVersion("calmr"))
+  # Get calmr version from DESCRIPTION
+  app_desc <- utils::packageDescription("calmr.app")
+  imps <- strsplit(app_desc$Imports, ",")[[1]]
+  imps <- imps[grepl("calmr", imps)]
+  # extract version requirement
+  required_calmr_version <- gsub(".*>= *([0-9\\.]+).*", "\\1", imps)
+  required_calmr_version <- "0.9.0"
+  if (utils::compareVersion(calmr_version, required_calmr_version) >= 0) {
+    msg <- ""
+  } else {
+    msg <- paste0(
+      "calmr.app requires calmr version ",
+      required_calmr_version,
+      " or higher. Please match versions to avoid issues."
+    )
+  }
+  msg
+}
