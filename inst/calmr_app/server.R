@@ -1,6 +1,6 @@
 library(calmr.app)
 # whether to print debugging messages
-debug_mode <- FALSE
+debug_mode <- TRUE
 
 shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
   shiny::updateSelectizeInput(
@@ -376,7 +376,7 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
     if (!is.null(experiment())) {
       if (debug_mode) print("making graphs")
       shiny::withProgress(message = "Making graphs...", {
-        graphs(unlist(unname(calmr::graph(experiment())),
+        graphs(unlist(calmr::graph(experiment()),
           recursive = FALSE
         ))
         # check if we need to maintain current selections
@@ -401,9 +401,9 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
       if (debug_mode) print("remaking graph1 due to slider change")
       if (input$graph1_sel != "") {
         new_graphs <- unlist(
-          unname(calmr::graph(experiment(),
+          calmr::graph(experiment(),
             t = input$graph1_trial
-          )),
+          ),
           recursive = FALSE
         )
         current_graph1(new_graphs[input$graph1_sel])
@@ -417,9 +417,9 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
       if (debug_mode) print("remaking graph2 due to slider change")
       if (input$graph2_sel != "") {
         new_graphs <- unlist(
-          unname(calmr::graph(experiment(),
+          calmr::graph(experiment(),
             t = input$graph2_trial
-          )),
+          ),
           recursive = FALSE
         )
         current_graph2(new_graphs[input$graph2_sel])
@@ -433,12 +433,12 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
       if (debug_mode) print("remaking graph1 due to selection change")
       if (input$graph1_sel != "") {
         new_graphs <- unlist(
-          unname(calmr::graph(experiment(),
+          calmr::graph(experiment(),
             t = input$graph1_trial
-          )),
+          ),
           recursive = FALSE
         )
-        current_graph1(new_graphs[input$graph1_sel])
+        current_graph1(new_graphs[[input$graph1_sel]])
       }
     }
   })
@@ -449,9 +449,9 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
       if (debug_mode) print("remaking graph2 due to selection change")
       if (input$graph2_sel != "") {
         new_graphs <- unlist(
-          unname(calmr::graph(experiment(),
+          calmr::graph(experiment(),
             t = input$graph2_trial
-          )),
+          ),
           recursive = FALSE
         )
         current_graph2(new_graphs[input$graph2_sel])
