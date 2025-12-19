@@ -1,3 +1,10 @@
+# calmr.app 0.1.2
+* Compatibility with calmr `0.8.1`
+* Fixed bug when displaying graphs.
+* Bumped `calmr` version in DESCRIPTION.
+* Added a warning message to GUI for version mismatch. 
+
+
 # calmr.app 0.1.1
 
 * Fixed bug associated with removal of phases.
