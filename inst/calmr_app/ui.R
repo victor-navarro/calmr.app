@@ -109,7 +109,7 @@ bslib::page_navbar(
                 paste0("calmr v", as.character(calmr_version)),
                 "</center>",
                 "<br><center>",
-                .get_version_warning(),
+                calmr.app:::.get_version_warning(),
                 "</center>"
               ),
             )
