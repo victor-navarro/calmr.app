@@ -91,63 +91,90 @@ shiny::shinyServer(function(input, output) { # nolint: cyclocomp_linter.
   shiny::observeEvent(input$parse_design, {
     # get old stimuli (for parameter retention)
     if (debug_mode) print("parsing")
-    # parse design_df
-    design_df(rhandsontable::hot_to_r(input$design_tbl))
-    design(calmr::parse_design(design_df()))
-    # get parameters
-    # but, keep parameters if there are compatible parameters already
-    if (debug_mode) print("getting parameters")
-    new_params <- calmr::get_parameters(
-      design(),
-      model = input$model_selection
-    )
-    # change current parameters
-    current_parameters(new_params)
-    # make parameter tables
-    par_tables(calmr.app:::.make_par_tables(
-      model = input$model_selection,
-      current_parameters()
-    ))
-    # flip needs_globalpars if necessary
-    needs_globalpars(calmr.app:::.check_globalpars(
-      input$model_selection,
-      current_parameters()
-    ))
-    # flip needs_timings if necessary
-    needs_timings(
-      input$model_selection %in%
-        calmr::supported_timed_models()
-    )
-    # get timings
-    if (needs_timings()) {
-      if (debug_mode) print("getting timings")
-      current_timings(calmr::get_timings(
-        design(),
-        model = input$model_selection
-      ))
-      needs_trial_timings("trial_ts" %in% names(current_timings()))
-      needs_period_timings("period_ts" %in% names(current_timings()))
-      needs_transition_timings(
-        "transition_ts" %in%
-          names(current_timings())
-      )
-      needs_global_timings(
-        any(!(names(current_timings()) %in% c(
-          "trial_ts", "period_ts", "transition_ts"
-        )))
-      )
+    # Try to parse
+    .parsed <- FALSE
+    tryCatch(
+      {
+        # parse design_df
+        .design_df <- rhandsontable::hot_to_r(input$design_tbl)
+        .design <- calmr::parse_design(.design_df)
+        # get parameters
+        # but, keep parameters if there are compatible parameters already
+        if (debug_mode) print("getting parameters")
+        .current_parameters <- calmr::get_parameters(
+          .design,
+          model = input$model_selection
+        )
+        # make parameter tables
+        .par_tables <- calmr.app:::.make_par_tables(
+          model = input$model_selection,
+          .current_parameters
+        )
+        # flip needs_globalpars if necessary
+        .needs_globalpars <- calmr.app:::.check_globalpars(
+          input$model_selection,
+          .current_parameters
+        )
+        # flip needs_timings if necessary
+        .needs_timings <- input$model_selection %in%
+          calmr::supported_timed_models()
 
-      # make timing tables
-      timing_tables(calmr.app:::.make_timing_tables(
-        current_timings()
-      ))
-    } else {
-      current_timings(NULL)
-      timing_tables(NULL)
+        # get timings
+        if (.needs_timings) {
+          if (debug_mode) print("getting timings")
+          .current_timings <- calmr::get_timings(
+            .design,
+            model = input$model_selection
+          )
+          .needs_trial_timings <- "trial_ts" %in% names(.current_timings)
+          .needs_period_timings <- "period_ts" %in% names(.current_timings)
+          .needs_transition_timings <- "transition_ts" %in%
+            names(.current_timings)
+          .needs_global_timings <- any(!(names(.current_timings) %in% c(
+            "trial_ts", "period_ts", "transition_ts"
+          )))
+          # make timing tables
+          .timing_tables <- calmr.app:::.make_timing_tables(
+            .current_timings
+          )
+          # mostly safe?
+          timing_tables(.timing_tables)
+          current_timings(.current_timings)
+          needs_globalpars(.needs_globalpars)
+          needs_timings(.needs_timings)
+          needs_trial_timings(.needs_trial_timings)
+          needs_period_timings(.needs_period_timings)
+          needs_transition_timings(.needs_transition_timings)
+          needs_global_timings(.needs_global_timings)
+        } else {
+          current_timings(NULL)
+          timing_tables(NULL)
+        }
+        if (debug_mode) print("done with parameters")
+        .parsed <- TRUE
+      },
+      error = function(x) {
+        if (debug_mode) print("error parsing design")
+        shinyalert::shinyalert(
+          title = "Error!",
+          text = "Something went wrong parsing your design!",
+          size = "s", closeOnEsc = TRUE,
+          closeOnClickOutside = TRUE, html = FALSE,
+          type = "error", showConfirmButton = TRUE, showCancelButton = FALSE,
+          confirmButtonText = "OK", confirmButtonCol = "#AEDEF4"
+        )
+      }
+    )
+    if (.parsed) {
+      if (debug_mode) print("changing reactive values")
+      # change reactive values
+      par_tables(.par_tables)
+      current_parameters(.current_parameters)
+      design_df(.design_df)
+      design(.design)
     }
-    if (debug_mode) print("done with parameters")
-    # flip parsed
-    parsed(TRUE)
+    # flip parsed reactive
+    parsed(.parsed)
   })
 
   shiny::observeEvent(input$run_experiment, {
